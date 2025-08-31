@@ -185,16 +185,9 @@ const sampleLessons = {
   shopping: {
     topic: 'Shopping',
     hiddenTopic: true,
-    image: 'https://via.placeholder.com/300x200?text=Shopping',
+    image: 'https://source.unsplash.com/300x200/?shopping,mall,store',
     vocabulary: [
-      'market',
-      'price',
-      'buy',
-      'sell',
-      'customer',
-      'shop',
-      'money',
-      'product',
+      'market', 'price', 'buy', 'sell', 'customer', 'shop', 'money', 'product',
     ],
     description: 'Learn vocabulary and phrases for shopping and buying things',
     iceBreaker: {
@@ -211,43 +204,37 @@ const sampleLessons = {
   food: {
     topic: 'Food & Cooking',
     hiddenTopic: true,
-    image: 'https://via.placeholder.com/300x200?text=Food',
+    image: 'https://source.unsplash.com/300x200/?food,cooking,kitchen',
     vocabulary: [
-      'cook',
-      'recipe',
-      'ingredient',
-      'delicious',
-      'spicy',
-      'sweet',
-      'kitchen',
-      'meal',
+      'cook', 'recipe', 'ingredient', 'delicious', 'spicy', 'sweet', 'kitchen', 'meal',
     ],
     description: 'Explore food vocabulary and cooking terms',
     iceBreaker: {
       type: 'taste_challenge',
       title: 'Taste Challenge! 🍎',
       description: 'Can you describe these flavors?',
+      questions: [
+        { item: "sweet apple", price: 0 },
+        { item: "spicy pepper", price: 0 }
+      ]
     },
   },
   travel: {
     topic: 'Travel & Transportation',
     hiddenTopic: true,
-    image: 'https://via.placeholder.com/300x200?text=Travel',
+    image: 'https://source.unsplash.com/300x200/?travel,airport,vacation',
     vocabulary: [
-      'airport',
-      'ticket',
-      'journey',
-      'destination',
-      'luggage',
-      'passport',
-      'hotel',
-      'tourist',
+      'airport', 'ticket', 'journey', 'destination', 'luggage', 'passport', 'hotel', 'tourist',
     ],
     description: 'Essential vocabulary for traveling and transportation',
     iceBreaker: {
       type: 'destination_match',
       title: 'Where in the World? 🌍',
       description: 'Match the landmark to the country!',
+      questions: [
+        { item: "Eiffel Tower", price: 0 },
+        { item: "Pyramids", price: 0 }
+      ]
     },
   },
 };
@@ -260,6 +247,21 @@ const IceBreaker = ({ lesson, onComplete }) => {
   const [userGuess, setUserGuess] = useState('');
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
+
+  // التحقق من وجود الأسئلة
+  if (!lesson?.iceBreaker?.questions || lesson.iceBreaker.questions.length === 0) {
+    return (
+      <div className="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-lg mb-6">
+        <h2 className="text-xl font-bold mb-4">No questions available</h2>
+        <button
+          onClick={() => onComplete()}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+        >
+          Continue
+        </button>
+      </div>
+    );
+  }
 
   const handleGuess = () => {
     const actualPrice = lesson.iceBreaker.questions[currentQuestion].price;
@@ -351,6 +353,9 @@ const GuessTopic = ({ lesson, onComplete }) => {
           src={lesson.image}
           alt="hint"
           className="w-full h-48 object-cover rounded-lg mb-4"
+          onError={(e) => {
+            e.target.src = `https://via.placeholder.com/300x200/4A90E2/FFFFFF?text=${encodeURIComponent(lesson.topic)}`;
+          }}
         />
         
         <div className="flex gap-2 mb-4">
@@ -382,7 +387,7 @@ const GuessTopic = ({ lesson, onComplete }) => {
   );
 };
 
-const VoiceChat = ({ aiService, ttsService, selectedTTS, isOnline }) => {
+const VoiceChat = ({ aiService, ttsService, selectedTTS, isOnline, handleSpeak }) => {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: "Hello! I'm your English practice assistant. What would you like to talk about today?" }
   ]);
@@ -440,6 +445,14 @@ const VoiceChat = ({ aiService, ttsService, selectedTTS, isOnline }) => {
                 : 'bg-green-100 text-green-800'
             }`}>
               {msg.content}
+              {msg.role === 'assistant' && (
+                <button
+                  onClick={() => handleSpeak(msg.content, 'chat')}
+                  className="ml-2 p-1 text-gray-400 hover:text-blue-500"
+                >
+                  <Volume2 className="w-4 h-4" />
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -558,6 +571,48 @@ const VocabNotebook = (props) => {
         <div className="flex items-center">
           <Book className="w-8 h-8 text-purple-500 mr-3" />
           <h2 className="text-2xl font-bold text-gray-800">Vocabulary Notebook 📚</h2>
+        </div>
+      </div>
+
+      {/* TTS Selector */}
+      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+        <h3 className="font-semibold text-blue-800 flex items-center mb-3">
+          <Headphones className="w-5 h-5 mr-2" />
+          🎵 Text-to-Speech Service
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            onClick={() => setSelectedTTS('browser')}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              selectedTTS === 'browser'
+                ? 'border-blue-500 bg-blue-100'
+                : 'border-gray-200 bg-white hover:border-blue-300'
+            }`}
+          >
+            <div className="text-center">
+              <Volume2 className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+              <h4 className="font-semibold text-sm">Browser TTS</h4>
+              <p className="text-xs text-gray-600">Free • Works Offline</p>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setSelectedTTS('elevenlabs')}
+            disabled={!isOnline}
+            className={`p-3 rounded-lg border-2 transition-all ${
+              selectedTTS === 'elevenlabs'
+                ? 'border-purple-500 bg-purple-100'
+                : 'border-gray-200 bg-white hover:border-purple-300 disabled:bg-gray-100'
+            }`}
+          >
+            <div className="text-center">
+              <div className="w-6 h-6 mx-auto mb-2 bg-purple-500 rounded flex items-center justify-center">
+                <span className="text-white text-xs font-bold">11</span>
+              </div>
+              <h4 className="font-semibold text-sm">ElevenLabs</h4>
+              <p className="text-xs text-gray-600">AI Voice • Premium</p>
+            </div>
+          </button>
         </div>
       </div>
 
@@ -723,7 +778,7 @@ const VocabNotebook = (props) => {
   );
 };
 
-const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, challengeTimer, setChallengeTimer, formatTime, setPoints }) => {
+const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, challengeTimer, setChallengeTimer, formatTime, setPoints, handleSpeak, currentlySpeaking }) => {
   const challenges = [
     {
       type: 'pronunciation',
@@ -875,14 +930,21 @@ const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, c
               </div>
               <p className="text-gray-600 mb-3">{c.instruction}</p>
 
+              {/* Pronunciation */}
               {c.type === 'pronunciation' && !c.completed && (
                 <div>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {c.words.map((w) => (
                       <button
                         key={w}
+                        onClick={() => handleSpeak(w, 'challenge')}
                         className="flex items-center px-3 py-2 bg-blue-100 text-blue-700 rounded-lg"
                       >
+                        {currentlySpeaking === w ? (
+                          <Pause className="w-4 h-4 mr-1" />
+                        ) : (
+                          <Volume2 className="w-4 h-4 mr-1" />
+                        )}
                         {w}
                       </button>
                     ))}
@@ -896,11 +958,18 @@ const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, c
                 </div>
               )}
 
+              {/* Sentence Building */}
               {c.type === 'sentence_building' && !c.completed && (
                 <div>
                   <div className="space-y-2 mb-3">
                     {c.words.map((w) => (
                       <div key={w} className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleSpeak(w)}
+                          className="p-1 text-blue-500 hover:bg-blue-50 rounded"
+                        >
+                          <Volume2 className="w-4 h-4" />
+                        </button>
                         <span className="font-semibold text-purple-600">{w}:</span>
                         <input
                           type="text"
@@ -923,6 +992,7 @@ const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, c
                 </div>
               )}
 
+              {/* Quick Quiz */}
               {c.type === 'quick_quiz' && !c.completed && (
                 <div className="space-y-3">
                   {c.questions.map((q, qi) => {
@@ -932,6 +1002,12 @@ const DailyChallenge = ({ selectedLesson, challengeActive, setChallengeActive, c
                     return (
                       <div key={qi} className="bg-gray-50 p-3 rounded">
                         <div className="flex items-center mb-2">
+                          <button
+                            onClick={() => handleSpeak(q.word)}
+                            className="p-1 text-blue-500 hover:bg-blue-100 rounded mr-2"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
                           <p className="font-semibold">
                             What does "{q.word}" mean?
                           </p>
@@ -1150,7 +1226,10 @@ const LexiLearnSprint3Real = () => {
       {/* Navigation Buttons */}
       <div className="flex gap-4 justify-center">
         <button
-          onClick={() => setShowVocabNotebook(!showVocabNotebook)}
+          onClick={() => {
+            setShowVocabNotebook(!showVocabNotebook);
+            setShowDailyChallenge(false);
+          }}
           className={`px-4 py-2 rounded-lg flex items-center ${
             showVocabNotebook 
               ? 'bg-purple-500 text-white' 
@@ -1162,7 +1241,10 @@ const LexiLearnSprint3Real = () => {
         </button>
         
         <button
-          onClick={() => setShowDailyChallenge(!showDailyChallenge)}
+          onClick={() => {
+            setShowDailyChallenge(!showDailyChallenge);
+            setShowVocabNotebook(false);
+          }}
           className={`px-4 py-2 rounded-lg flex items-center ${
             showDailyChallenge 
               ? 'bg-yellow-500 text-white' 
@@ -1202,6 +1284,8 @@ const LexiLearnSprint3Real = () => {
           setChallengeTimer={setChallengeTimer}
           formatTime={formatTime}
           setPoints={setPoints}
+          handleSpeak={handleSpeak}
+          currentlySpeaking={currentlySpeaking}
         />
       ) : (
         <>
@@ -1225,6 +1309,7 @@ const LexiLearnSprint3Real = () => {
               ttsService={ttsService}
               selectedTTS={selectedTTS}
               isOnline={isOnline}
+              handleSpeak={handleSpeak}
             />
           )}
         </>
