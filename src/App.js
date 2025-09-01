@@ -1,5 +1,5 @@
 import React from 'react';
-import CombinedLexiLearn from './components/sprints/LexiLearnSprint3Real';
+import CombinedLexiLearn from './components/sprints/LexiLearnSprint3Real/LexiLearnSprint3Real';
 
 function App() {
   return (
