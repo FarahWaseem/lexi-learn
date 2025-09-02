@@ -1,56 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Brain, Check } from 'lucide-react';
 
-const GuessTopic = ({ lesson, onComplete, handleSpeak, currentlySpeaking }) => {
+const emojiMap = {
+  Shopping: '🛍️🏪',
+  'Food & Cooking': '🍳🥘',
+  'Travel & Transportation': '✈️🗺️',
+  'Family & Relationships': '👨‍👩‍👧‍👦❤️',
+  'Weather & Seasons': '☀️🌧️',
+  'Hobbies & Free Time': '🎨⚽',
+};
+
+const GuessTopic = ({ lesson, onComplete, handleSpeak }) => {
   const [guess, setGuess] = useState('');
   const [showResult, setShowResult] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
 
   const handleGuess = () => {
-    const correct = guess.toLowerCase().includes(lesson.topic.toLowerCase());
-    setIsCorrect(correct);
     setShowResult(true);
-    
-    setTimeout(() => {
-      onComplete(correct);
-    }, 2000);
+    setTimeout(onComplete, 3000);
   };
 
+  useEffect(() => {
+    handleSpeak?.("Let’s guess today’s topic!");
+  }, []);
+
   return (
-    <div className="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-lg mb-6">
-      <h2 className="text-xl font-bold mb-4">Can you guess today's topic? 🤔</h2>
-      
-      <div className="bg-yellow-50 p-4 rounded-lg">
-        <img
-          src={lesson.image}
-          alt="hint"
-          className="w-full h-48 object-cover rounded-lg mb-4"
-          onError={(e) => {
-            e.target.src = `https://via.placeholder.com/300x200/4A90E2/FFFFFF?text=${encodeURIComponent(lesson.topic)}`;
-          }}
-        />
-        
-        <div className="flex gap-2 mb-4">
-          <input
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            placeholder="Type your guess..."
-            className="flex-1 px-3 py-2 border rounded-lg"
-          />
-          <button
-            onClick={handleGuess}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-          >
-            Guess!
-          </button>
+    <div className="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-lg">
+      <div className="text-center mb-6">
+        <Brain className="w-12 h-12 mx-auto mb-3 text-blue-500" />
+        <h2 className="text-2xl font-bold mb-2">Guess Today’s Topic! 🤔</h2>
+        <p className="text-gray-600">Look at the image and guess what we’ll learn about today</p>
+      </div>
+
+      <div className="text-center">
+        <div className="w-64 h-40 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg mx-auto flex items-center justify-center border-2 border-dashed border-gray-300 mb-4">
+          <div className="text-center">
+            <div className="text-5xl mb-2">{emojiMap[lesson.topic] || '📚'}</div>
+            <p className="text-xs text-gray-500">Visual hints</p>
+          </div>
         </div>
-        
-        {showResult && (
-          <div className={`mt-3 p-2 rounded-lg text-sm ${
-            isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {isCorrect
-              ? `🎉 Correct! Today's topic is ${lesson.topic}!`
-              : `❌ Not quite! The topic is ${lesson.topic}.`}
+
+        {!showResult ? (
+          <>
+            <p className="text-lg mb-3 font-semibold">What do you think today’s topic is?</p>
+            <input
+              type="text"
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              placeholder="Type your guess..."
+              className="px-4 py-2 border border-gray-300 rounded-lg mr-2"
+            />
+            <button
+              onClick={handleGuess}
+              disabled={!guess.trim()}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300"
+            >
+              Guess!
+            </button>
+          </>
+        ) : (
+          <div className="bg-green-50 p-4 rounded-lg">
+            <Check className="w-8 h-8 mx-auto mb-2 text-green-500" />
+            <h3 className="text-xl font-bold text-green-700 mb-2">Great guess! 🎉</h3>
+            <p className="text-lg">
+              Today’s topic is: <strong>{lesson.topic}</strong>
+            </p>
+            <p className="text-gray-600 mt-2">{lesson.description}</p>
+            <p className="text-sm text-gray-500 mt-2">Starting voice chat with AI…</p>
           </div>
         )}
       </div>

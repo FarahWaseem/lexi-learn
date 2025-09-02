@@ -1,3 +1,4 @@
+// src/hooks/useLexiLearn/useLexiLearn.js
 import { useState, useEffect, useCallback } from 'react';
 import { useTTS } from '../useTTS/useTTS';
 import { useChallenge } from '../useChallenge/useChallenge';
@@ -22,64 +23,70 @@ export const useLexiLearn = (elevenLabsKey, geminiKey) => {
   const tts = useTTS(elevenLabsKey);
   const challenge = useChallenge();
 
+  // تهيئة التطبيق مرة واحدة عند تغيّر المفاتيح
   useEffect(() => {
-  const initializeApp = async () => {
-    try {
-      console.log('Initializing app with API keys...');
-      setAiService(new GeminiAIService(geminiKey));
-      
-      // تهيئة TTS service
-      if (tts.initializeTTS) {
-        tts.initializeTTS();
-      }
-      
-      const keys = Object.keys(sampleLessons);
-      const random = keys[Math.floor(Math.random() * keys.length)];
-      setSelectedLesson(sampleLessons[random]);
-      
-      setCurrentStep('ice_breaker');
-      console.log('App initialized successfully');
-    } catch (err) {
-      console.error('Error initializing app:', err);
-      setError(`Failed to initialize: ${err.message}`);
-    }
-  };
+    const initializeApp = async () => {
+      try {
+        console.log('Initializing app with API keys...');
+        setAiService(new GeminiAIService(geminiKey));
 
-  initializeApp();
+        const keys = Object.keys(sampleLessons);
+        const random = keys[Math.floor(Math.random() * keys.length)];
+        setSelectedLesson(sampleLessons[random]);
+
+        setCurrentStep('ice_breaker');
+        console.log('App initialized successfully');
+      } catch (err) {
+        console.error('Error initializing app:', err);
+        setError(`Failed to initialize: ${err.message}`);
+      }
+    };
+
+    initializeApp();
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [elevenLabsKey, geminiKey, tts]);
+  }, [elevenLabsKey, geminiKey]);
+
+  // تهيئة TTS لاحقاً عند تغيّر المفتاح فقط
+  useEffect(() => {
+    if (tts.initializeTTS) {
+      tts.initializeTTS();
+    }
+  }, [elevenLabsKey]);
 
   const handleIceBreakerComplete = useCallback(() => {
     setCurrentStep('guess_topic');
   }, []);
 
-  const handleGuessTopicComplete = useCallback((correct) => {
-    setTopicRevealed(correct);
-    if (correct) setPoints(p => p + 20);
-    setCurrentStep('voice_chat');
-  }, [setPoints]);
+  const handleGuessTopicComplete = useCallback(
+    (correct) => {
+      setTopicRevealed(correct);
+      if (correct) setPoints((p) => p + 20);
+      setCurrentStep('voice_chat');
+    },
+    [setPoints]
+  );
 
   return {
     // From TTS
     ...tts,
-    
+
     // From Challenge
     challengeTimer: challenge.challengeTimer,
     challengeActive: challenge.challengeActive,
     setChallengeActive: challenge.setChallengeActive,
     challengeCompleted: challenge.challengeCompleted,
     formatTime: challenge.getFormattedTime,
-    
+
     // From LexiLearn
     aiService,
     currentStep,
@@ -101,6 +108,6 @@ export const useLexiLearn = (elevenLabsKey, geminiKey) => {
     error,
     setError,
     handleIceBreakerComplete,
-    handleGuessTopicComplete
+    handleGuessTopicComplete,
   };
 };

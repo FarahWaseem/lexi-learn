@@ -1,100 +1,56 @@
-import React, { useState } from 'react';
-import { Volume2, Pause } from 'lucide-react';
+// src/features/IceBreaker/IceBreaker.jsx
+import React, { useEffect, useState } from 'react';
+import { Zap } from 'lucide-react';
 
-const IceBreaker = ({ lesson, onComplete, handleSpeak, currentlySpeaking }) => {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [userGuess, setUserGuess] = useState('');
+const gameMap = { /* ...نفس الألعاب... */ };
+
+const IceBreaker = ({ lesson, onComplete, handleSpeak }) => {
+  // 1. تأكد من وجود الـ lesson + fallback
+  const type = lesson?.iceBreaker?.type ?? 'hobby_mime';
+  const config = gameMap[type] ?? gameMap.hobby_mime;
+
+  // 2. لو ما في items رجع null (ما يظهر شي)
+  if (!config?.items?.length) return null;
+
+  const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const current = config.items[index];
 
-  if (!lesson?.iceBreaker?.questions || lesson.iceBreaker.questions.length === 0) {
+  const buttonBase = 'px-5 py-2.5 rounded-lg font-semibold text-sm text-white shadow-md bg-gradient-to-br from-green-400 to-green-600 active:scale-95';
+  const optionButton = 'px-4 py-2.5 rounded-lg text-sm font-medium shadow-md bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 active:scale-95';
+
+  const handleAnswer = (answer) => {
+    let correct = false;
+    if (type === 'price_guess') correct = Math.abs(answer - current.correctPrice) <= 1;
+    else correct = answer === current.correct;
+
+    if (correct) setScore(s => s + 1);
+    if (index < config.items.length - 1) setIndex(i => i + 1);
+    else { setCompleted(true); setTimeout(onComplete, 1500); }
+  };
+
+  useEffect(() => { handleSpeak?.(config.title); }, []);
+
+  if (completed) {
     return (
-      <div className="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-lg mb-6">
-        <h2 className="text-xl font-bold mb-4">No questions available</h2>
-        <button
-          onClick={() => onComplete()}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-        >
-          Continue
-        </button>
+      <div className="text-center p-6 bg-green-50 rounded-xl border-2 border-green-200">
+        <div className="text-6xl mb-3">🎉</div>
+        <h3 className="text-2xl font-bold text-green-700">{score}/{config.items.length}</h3>
       </div>
     );
   }
 
-  const handleGuess = () => {
-    const actualPrice = lesson.iceBreaker.questions[currentQuestion].price;
-    const userPrice = parseFloat(userGuess);
-    
-    const difference = Math.abs(userPrice - actualPrice);
-    const percentageDiff = difference / actualPrice;
-    
-    if (percentageDiff <= 0.2) {
-      setScore(score + 10);
-    }
-    
-    setShowResult(true);
-    setTimeout(() => {
-      setShowResult(false);
-      setUserGuess('');
-      
-      if (currentQuestion < lesson.iceBreaker.questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-      } else {
-        onComplete();
-      }
-    }, 2000);
-  };
-
   return (
-    <div className="bg-white p-6 rounded-lg border-2 border-blue-200 shadow-lg mb-6">
-      <h2 className="text-xl font-bold mb-4">{lesson.iceBreaker.title}</h2>
-      <p className="text-gray-600 mb-4">{lesson.iceBreaker.description}</p>
-      
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h3 className="font-semibold mb-2">Question {currentQuestion + 1} of {lesson.iceBreaker.questions.length}</h3>
-        
-        <div className="flex items-center mb-3">
-          <button
-            onClick={() => handleSpeak(lesson.iceBreaker.questions[currentQuestion].item)}
-            className="p-2 text-blue-500 hover:bg-blue-100 rounded mr-2"
-          >
-            {currentlySpeaking === lesson.iceBreaker.questions[currentQuestion].item ? (
-              <Pause className="w-5 h-5" />
-            ) : (
-              <Volume2 className="w-5 h-5" />
-            )}
-          </button>
-          <p className="text-lg">How much do you think {lesson.iceBreaker.questions[currentQuestion].item} costs?</p>
+    <div className="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl border-2 border-green-200 shadow-xl">
+      <div className="text-center mb-6">
+        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+          <Zap className="w-6 h-6 text-white" />
         </div>
-        
-        <div className="flex gap-2 mb-4">
-          <span className="text-2xl">$</span>
-          <input
-            type="number"
-            value={userGuess}
-            onChange={(e) => setUserGuess(e.target.value)}
-            placeholder="Enter price"
-            className="flex-1 px-3 py-2 border rounded-lg text-lg"
-            step="0.01"
-            min="0"
-          />
-        </div>
-        
-        <button
-          onClick={handleGuess}
-          disabled={!userGuess}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:bg-gray-300"
-        >
-          Submit Guess
-        </button>
-        
-        {showResult && (
-          <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-lg">
-            <p>The actual price is ${lesson.iceBreaker.questions[currentQuestion].price.toFixed(2)}</p>
-            <p className="font-semibold">Your score: {score}</p>
-          </div>
-        )}
+        <h2 className="text-2xl font-bold">{config.title}</h2>
+        <p>Score: {score}/{config.items.length}</p>
       </div>
+      {renderQuestion()}
     </div>
   );
 };

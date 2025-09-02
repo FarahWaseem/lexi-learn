@@ -36,6 +36,9 @@ export const useLexiLearn = (elevenLabsKey, geminiKey) => {
         const keys = Object.keys(sampleLessons);
         const random = keys[Math.floor(Math.random() * keys.length)];
         setSelectedLesson(sampleLessons[random]);
+        const chosen = sampleLessons[random];
+console.log('Chosen lesson:', chosen, 'iceBreaker?', !!chosen.iceBreaker);
+setSelectedLesson(chosen);
         
         // الانتقال إلى خطوة كسر الجليد بعد التهيئة
         setCurrentStep('ice_breaker');

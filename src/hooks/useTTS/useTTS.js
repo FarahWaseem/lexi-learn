@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback,useEffect } from 'react';
 import { RealTTSService } from '../../services/TTSService';
 import { stopAllSpeech } from '../../utils/speechUtils';
+
 
 export const useTTS = (elevenLabsApiKey) => {
   const [ttsService, setTtsService] = useState(null);
