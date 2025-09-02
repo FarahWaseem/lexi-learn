@@ -50,6 +50,7 @@ const LexiLearnSprint3Real = () => {
       </div>
     );
   }
+
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
       <Header title="LexiLearn Sprint 3" subtitle="Real AI Integration" points={points} />
@@ -122,13 +123,13 @@ const LexiLearnSprint3Real = () => {
       ) : (
         <>
           {currentStep === 'ice_breaker' && selectedLesson?.iceBreaker && (
-  <IceBreaker
-    lesson={selectedLesson}
-    onComplete={handleIceBreakerComplete}
-    handleSpeak={handleSpeak}
-    currentlySpeaking={currentlySpeaking}
-  />
-)}
+            <IceBreaker
+              lesson={selectedLesson}
+              onComplete={handleIceBreakerComplete}
+              handleSpeak={handleSpeak}
+              currentlySpeaking={currentlySpeaking}
+            />
+          )}
 
           {currentStep === 'guess_topic' && selectedLesson?.topic && (
             <GuessTopic
