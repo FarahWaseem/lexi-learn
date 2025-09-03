@@ -1,55 +1,52 @@
 // src/services/AIService.js
-//import { handleApiError, fetchWithTimeout } from '../utils/apiUtils';
 import { handleApiError, fetchWithTimeout, retryOperation } from '../utils/apiUtils';
-
 
 export class GeminiAIService {
   constructor(apiKey) {
     this.apiKey = apiKey;
-this.apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    this.apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   }
 
   async generateContent(prompt) {
     console.log('🔑 API Key:', this.apiKey ? 'Exists' : 'Missing');
-console.log('🌐 API URL:', this.apiUrl);
-  if (!this.apiKey) {
-    console.error('Gemini key missing');
-    throw new Error('Gemini key missing');
+    console.log('🌐 API URL:', this.apiUrl);
+    if (!this.apiKey) {
+      console.error('Gemini key missing');
+      throw new Error('Gemini key missing');
+    }
+
+    try {
+      return await retryOperation(async () => {
+        const response = await fetchWithTimeout(
+          `${this.apiUrl}?key=${this.apiKey}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+            }),
+          },
+          15000
+        );
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+      }, 3, 2000); // 3 attempts, 2 seconds between each
+    } catch (error) {
+      console.error('Error in generateContent:', error);
+      throw handleApiError(error, 'Gemini AI');
+    }
   }
 
-  try {
-    return await retryOperation(async () => {
-      const response = await fetchWithTimeout(
-        `${this.apiUrl}?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-          }),
-        },
-        15000
-      );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data.candidates[0].content.parts[0].text;
-    }, 3, 2000); // 3 محاولات، 2 ثانية بينهم
-    
-  } catch (error) {
-    console.error('Error in generateContent:', error);
-    throw handleApiError(error, 'Gemini AI');
-  }
-}
   async checkSentence(word, sentence) {
-  try {
-    // ✅ prompt أكثر وضوحاً لـ Gemini
-    const prompt = `As a strict English teacher, check if this sentence uses the vocabulary word correctly:
+    try {
+      const prompt = `As a strict English teacher, check if this sentence uses the vocabulary word correctly:
     
 VOCABULARY WORD: "${word}"
 STUDENT'S SENTENCE: "${sentence}"
@@ -62,62 +59,67 @@ ANALYSIS REQUIREMENTS:
 IMPORTANT: Reply ONLY in this exact format:
 [CORRECT] or [INCORRECT]: Your brief explanation here (max 12 words)`;
 
-    console.log('🔄 Sending to Gemini with prompt:', prompt);
-    const resp = await this.generateContent(prompt);
-    console.log('✅ Raw Gemini response:', resp);
+      console.log('🔄 Sending to Gemini with prompt:', prompt);
+      const resp = await this.generateContent(prompt);
+      console.log('✅ Raw Gemini response:', resp);
 
-    if (!resp) {
-      throw new Error('Empty response from Gemini');
+      if (!resp) {
+        throw new Error('Empty response from Gemini');
+      }
+
+      const responseText = resp.trim();
+      console.log('✅ Trimmed response:', responseText);
+
+      if (responseText.includes('[CORRECT]')) {
+        const feedback = responseText.replace('[CORRECT]:', '').replace('[CORRECT] :', '').trim();
+        return { 
+          isCorrect: true, 
+          feedback: feedback || 'Excellent! Word used correctly.',
+          source: 'gemini'
+        };
+      }
+      else if (responseText.includes('[INCORRECT]')) {
+        const feedback = responseText.replace('[INCORRECT]:', '').replace('[INCORRECT] :', '').trim();
+        return { 
+          isCorrect: false, 
+          feedback: feedback || 'Please check word usage and grammar.',
+          source: 'gemini'
+        };
+      }
+      else {
+        console.warn('⚠️ Unexpected response format:', responseText);
+        throw new Error('Invalid response format from Gemini');
+      }
+    } catch (error) {
+      console.error('❌ Gemini failed:', error.message);
+      return this.fallbackCheck(word, sentence);
     }
+  }
 
-    // ✅ تحسين البحث عن الرد
-    const responseText = resp.trim();
-    console.log('✅ Trimmed response:', responseText);
+  async checkGeminiStatus() {
+    console.log('--- Checking Gemini status... ---');
+    try {
+      const testPrompt = 'Hello, are you working? Reply with [YES] if operational.';
+      console.log('1. Attempting to call Gemini with a test prompt.');
+      const response = await this.generateContent(testPrompt);
+      console.log('2. Received response from Gemini:', response);
+      
+      const isOperational = response.includes('[YES]');
+      console.log('3. Is operational based on response:', isOperational);
 
-    if (responseText.includes('[CORRECT]')) {
-      const feedback = responseText.replace('[CORRECT]:', '').replace('[CORRECT] :', '').trim();
-      return { 
-        isCorrect: true, 
-        feedback: feedback || 'Excellent! Word used correctly.',
-        source: 'gemini'
+      return {
+        operational: isOperational,
+        response: response
+      };
+    } catch (error) {
+      console.error('❌ Error during Gemini status check:', error);
+      return {
+        operational: false,
+        error: error.message
       };
     }
-    else if (responseText.includes('[INCORRECT]')) {
-      const feedback = responseText.replace('[INCORRECT]:', '').replace('[INCORRECT] :', '').trim();
-      return { 
-        isCorrect: false, 
-        feedback: feedback || 'Please check word usage and grammar.',
-        source: 'gemini'
-      };
-    }
-    else {
-      console.warn('⚠️ Unexpected response format:', responseText);
-      throw new Error('Invalid response format from Gemini');
-    }
-    
-  } catch (error) {
-    console.error('❌ Gemini failed:', error.message);
-    return this.fallbackCheck(word, sentence);
   }
-}
 
-// أضف هذه الدالة في AIService class
-async checkGeminiStatus() {
-  try {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-    const testPrompt = 'Hello, are you working? Reply with [YES] if operational.';
-    const response = await this.generateContent(testPrompt);
-    return {
-      operational: response.includes('[YES]'),
-      response: response
-    };
-  } catch (error) {
-    return {
-      operational: false,
-      error: error.message
-    };
-  }
-}
   // ✅ Fallback محسن
   fallbackCheck(word, sentence) {
     const hasWord = sentence.toLowerCase().includes(word.toLowerCase());

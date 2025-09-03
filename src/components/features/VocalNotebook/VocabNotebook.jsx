@@ -1,3 +1,4 @@
+// src/components/VocabNotebook.jsx
 import React, { useState, useEffect } from 'react';
 import { Book, Plus, Loader2, Volume2, Pause } from 'lucide-react';
 import NotebookEntry from './NotebookEntry/NotebookEntry';
@@ -22,24 +23,35 @@ const VocabNotebook = ({
   const [error, setError] = useState('');
   const [geminiStatus, setGeminiStatus] = useState('checking');
 
-  // ✅ useEffect مصحح - بدون أخطاء
   useEffect(() => {
     let isMounted = true;
     
     const checkGemini = async () => {
-      if (aiService && aiService.checkGeminiStatus) {
+      console.log('--- VocabNotebook useEffect starting... ---');
+      if (aiService && isOnline) {
+        setGeminiStatus('checking');
+        console.log('4. Online, calling checkGeminiStatus from AIService.');
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000)); 
           const status = await aiService.checkGeminiStatus();
+            console.log('5. Status received from AIService:', status);
+
           if (isMounted) {
             setGeminiStatus(status.operational ? 'online' : 'offline');
-            console.log('Gemini status:', status);
+              console.log('6. UI status updated to:', status.operational ? 'online' : 'offline');
+
           }
         } catch (error) {
           if (isMounted) {
             setGeminiStatus('offline');
-            console.log('Auto Gemini check disabled due to rate limiting');
+            console.log('Gemini check failed:', error);
+              console.error('❌ Error during Gemini check:', error);
+
           }
+        }
+      } else {
+       console.log('4. Offline, or aiService not ready. Setting UI status to offline.');
+        if (isMounted) {
+          setGeminiStatus('offline');
         }
       }
     };
@@ -49,7 +61,7 @@ const VocabNotebook = ({
     return () => { 
       isMounted = false; 
     };
-  }, [aiService]); // ✅ dependency array صحيح
+  }, [aiService, isOnline]);
 
   const addToNotebook = async () => {
     if (!selectedWord || !currentSentence.trim()) {
@@ -73,7 +85,7 @@ const VocabNotebook = ({
     setCheckingGrammar(true);
 
     try {
-      if (isOnline && aiService) {
+      if (isOnline && geminiStatus === 'online' && aiService) {
         const res = await aiService.checkSentence(selectedWord, currentSentence);
         setVocabNotebook((prev) =>
           prev.map((e) =>
@@ -84,15 +96,15 @@ const VocabNotebook = ({
         );
         setPoints((p) => p + (res.isCorrect ? 15 : 5));
       } else {
-        const hasWord = currentSentence.toLowerCase().includes(selectedWord.toLowerCase());
+        const fallbackRes = aiService.fallbackCheck(selectedWord, currentSentence);
         setVocabNotebook((prev) =>
           prev.map((e) =>
             e.id === entry.id
               ? {
                   ...e,
-                  isCorrect: hasWord,
-                  feedback: 'Saved offline – will be checked when online',
-                  needsSync: true,
+                  isCorrect: fallbackRes.isCorrect,
+                  feedback: fallbackRes.feedback,
+                  needsSync: false,
                 }
               : e
           )
@@ -102,6 +114,13 @@ const VocabNotebook = ({
     } catch (e) {
       console.error(e);
       setError('Error checking sentence. Please try again.');
+      setVocabNotebook((prev) =>
+        prev.map((e) =>
+          e.id === entry.id
+            ? { ...e, isCorrect: false, feedback: 'Error with check', needsSync: false }
+            : e
+        )
+      );
     } finally {
       setCheckingGrammar(false);
       setCurrentSentence('');
@@ -128,7 +147,7 @@ const VocabNotebook = ({
             'bg-yellow-100 text-yellow-800'
           }`}>
             {geminiStatus === 'online' ? '✅ ONLINE' : 
-             geminiStatus === 'offline' ? '❌ OFFLINE' : '⏳ CHECKING'}
+              geminiStatus === 'offline' ? '❌ OFFLINE' : '⏳ CHECKING'}
           </span>
         </div>
         
