@@ -3,7 +3,7 @@ import { RealTTSService } from '../../services/TTSService';
 import { stopAllSpeech } from '../../utils/speechUtils';
 
 
-export const useTTS = (elevenLabsApiKey) => {
+export const useTTS = (elevenLabsApiKey,whisperService, onTranscriptionComplete) => {
   const [ttsService, setTtsService] = useState(null);
   const [selectedTTS, setSelectedTTS] = useState('browser');
   const [currentlySpeaking, setCurrentlySpeaking] = useState(null);
@@ -48,7 +48,7 @@ const startRecording = useCallback(async () => {
   } catch (error) {
     console.error('Recording failed:', error);
   }
-}, []);
+}, [whisperService, onTranscriptionComplete]);
 
 const stopRecording = useCallback(() => {
   if (mediaRecorder && isRecording) {

@@ -1,5 +1,7 @@
 // src/services/AIService.js
-import { handleApiError, fetchWithTimeout } from '../utils/apiUtils';
+//import { handleApiError, fetchWithTimeout } from '../utils/apiUtils';
+import { handleApiError, fetchWithTimeout, retryOperation } from '../utils/apiUtils';
+
 
 export class GeminiAIService {
   constructor(apiKey) {

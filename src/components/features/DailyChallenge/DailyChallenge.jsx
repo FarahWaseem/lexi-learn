@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Trophy, Clock, Timer, Zap,Wand2} from 'lucide-react';
+import { Sparkles, Trophy, Clock, Timer, Zap, Wand2, Volume2 } from 'lucide-react';
 import ChallengeCard from './ChallengeCard/ChallengeCard';
 
 const DailyChallenge = ({
