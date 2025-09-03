@@ -1,4 +1,3 @@
-// src/pages/LexiLearnSprint3Real.jsx
 import React from 'react';
 import { Book, Sparkles } from 'lucide-react';
 import { Header, LoadingSpinner, ErrorDisplay } from '../../common';
@@ -119,6 +118,7 @@ const LexiLearnSprint3Real = () => {
           setPoints={setPoints}
           handleSpeak={handleSpeak}
           currentlySpeaking={currentlySpeaking}
+          aiService={aiService}
         />
       ) : (
         <>
@@ -127,7 +127,6 @@ const LexiLearnSprint3Real = () => {
               lesson={selectedLesson}
               onComplete={handleIceBreakerComplete}
               handleSpeak={handleSpeak}
-              currentlySpeaking={currentlySpeaking}
             />
           )}
 

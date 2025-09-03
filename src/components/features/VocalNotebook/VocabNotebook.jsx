@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Book, Plus, Loader2, Volume2, Pause } from 'lucide-react';
 import NotebookEntry from './NotebookEntry/NotebookEntry';
 
@@ -20,6 +20,36 @@ const VocabNotebook = ({
 }) => {
   const [checkingGrammar, setCheckingGrammar] = useState(false);
   const [error, setError] = useState('');
+  const [geminiStatus, setGeminiStatus] = useState('checking');
+
+  // ✅ useEffect مصحح - بدون أخطاء
+  useEffect(() => {
+    let isMounted = true;
+    
+    const checkGemini = async () => {
+      if (aiService && aiService.checkGeminiStatus) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 1000)); 
+          const status = await aiService.checkGeminiStatus();
+          if (isMounted) {
+            setGeminiStatus(status.operational ? 'online' : 'offline');
+            console.log('Gemini status:', status);
+          }
+        } catch (error) {
+          if (isMounted) {
+            setGeminiStatus('offline');
+            console.log('Auto Gemini check disabled due to rate limiting');
+          }
+        }
+      }
+    };
+    
+    checkGemini();
+    
+    return () => { 
+      isMounted = false; 
+    };
+  }, [aiService]); // ✅ dependency array صحيح
 
   const addToNotebook = async () => {
     if (!selectedWord || !currentSentence.trim()) {
@@ -88,6 +118,27 @@ const VocabNotebook = ({
         </div>
       </div>
 
+      {/* مؤشر حالة Gemini */}
+      <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">AI Grammar Check:</span>
+          <span className={`px-2 py-1 rounded text-xs font-bold ${
+            geminiStatus === 'online' ? 'bg-green-100 text-green-800' : 
+            geminiStatus === 'offline' ? 'bg-red-100 text-red-800' : 
+            'bg-yellow-100 text-yellow-800'
+          }`}>
+            {geminiStatus === 'online' ? '✅ ONLINE' : 
+             geminiStatus === 'offline' ? '❌ OFFLINE' : '⏳ CHECKING'}
+          </span>
+        </div>
+        
+        {geminiStatus === 'offline' && (
+          <p className="text-xs text-red-600 mt-2">
+            Using basic grammar check. AI service unavailable.
+          </p>
+        )}
+      </div>
+
       {/* واجهة إضافة كلمات جديدة */}
       <div className="bg-purple-50 p-4 rounded-lg mb-6">
         <h3 className="font-semibold mb-3">Add a new word to your notebook:</h3>
@@ -109,20 +160,18 @@ const VocabNotebook = ({
               >
                 {w}
                 <button
-  onClick={(e) => {
-    e.stopPropagation();
-    console.log('Speaking word:', w);
-    console.log('handleSpeak function available:', !!handleSpeak);
-    handleSpeak(w);
-  }}
-  className="ml-1 p-1 hover:bg-purple-200 rounded"
->
-  {currentlySpeaking === w ? (
-    <Pause className="w-3 h-3" />
-  ) : (
-    <Volume2 className="w-3 h-3" />
-  )}
-</button>
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSpeak(w);
+                  }}
+                  className="ml-1 p-1 hover:bg-purple-200 rounded"
+                >
+                  {currentlySpeaking === w ? (
+                    <Pause className="w-3 h-3" />
+                  ) : (
+                    <Volume2 className="w-3 h-3" />
+                  )}
+                </button>
               </button>
             ))}
           </div>
@@ -162,7 +211,7 @@ const VocabNotebook = ({
         )}
       </div>
 
-      {/* عرض المدخلات باستخدام المكون الفرعي */}
+      {/* عرض المدخلات */}
       <div>
         <h3 className="font-semibold mb-4">
           Your Vocabulary Entries

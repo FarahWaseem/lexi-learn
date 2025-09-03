@@ -14,20 +14,35 @@ const ChallengeCard = ({
   quizFeedback,
   setQuizFeedback
 }) => {
-  const handleQuizAnswer = (qi, opt) => {
-    const q = challenge.questions[qi];
-    const correct = opt === q.correct;
-    const key = `${index}-${qi}`;
-    setSelectedAnswers((prev) => ({ ...prev, [key]: opt }));
-    setQuizFeedback((prev) => ({ ...prev, [key]: correct }));
-    
-    const allCorrect = challenge.questions.every((_, i) => {
-      const k = `${index}-${i}`;
-      return i === qi ? correct : quizFeedback[k];
-    });
-    
-    if (allCorrect) setTimeout(() => onComplete(index), 500);
-  };
+  const handleQuizAnswer = (qi, optionIndex) => {
+  const question = challenge.questions[qi];
+  const selectedOptionText = question.options[optionIndex];
+  const isCorrect = selectedOptionText === question.correct;
+  
+  console.log('Question:', question.word);
+  console.log('Selected:', selectedOptionText);
+  console.log('Correct:', question.correct);
+  console.log('Is Correct:', isCorrect);
+
+  const key = `${index}-${qi}`;
+  setSelectedAnswers((prev) => ({ ...prev, [key]: optionIndex }));
+  setQuizFeedback((prev) => ({ ...prev, [key]: isCorrect }));
+  
+  // تحقق إذا جميع الأسئلة صحيحة
+  const allQuestionsAnswered = challenge.questions.every((_, i) => {
+    const questionKey = `${index}-${i}`;
+    return quizFeedback[questionKey] !== undefined;
+  });
+  
+  const allQuestionsCorrect = challenge.questions.every((_, i) => {
+    const questionKey = `${index}-${i}`;
+    return quizFeedback[questionKey] === true;
+  });
+  
+  if (allQuestionsAnswered && allQuestionsCorrect) {
+    setTimeout(() => onComplete(index), 500);
+  }
+};
 
   const handleSentenceSubmit = () => {
     if (challenge.words.every((w) => userAnswers[w]?.trim())) {

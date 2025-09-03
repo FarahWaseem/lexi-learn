@@ -72,7 +72,7 @@ export const safeJsonParse = (str, defaultValue = null) => {
 };
 
 // إعادة المحاولة التلقائية
-export const retryOperation = async (operation, maxRetries = 3, delay = 1000) => {
+export const retryOperation = async (operation, maxRetries = 3, delay = 2000) => {
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await operation();
