@@ -136,7 +136,6 @@ const IceBreaker = ({ lesson, onComplete, handleSpeak, currentlySpeaking }) => {
   const [completed, setCompleted] = useState(false);
   const current = config.items[index];
 
-  const buttonBase = 'px-5 py-2.5 rounded-lg font-semibold text-sm text-white shadow-md bg-gradient-to-br from-green-400 to-green-600 active:scale-95';
   const optionButton = 'px-4 py-2.5 rounded-lg text-sm font-medium shadow-md bg-gradient-to-br from-sky-50 to-sky-100 border border-sky-200 active:scale-95';
 
   const handleAnswer = (answer) => {
@@ -159,127 +158,7 @@ const IceBreaker = ({ lesson, onComplete, handleSpeak, currentlySpeaking }) => {
 
   useEffect(() => {
     handleSpeak?.(config.title);
-  }, []);
-
-  const renderQuestion = () => {
-    switch (type) {
-      case 'price_guess':
-        return (
-          <div className="text-center">
-            <p className="text-lg font-medium mb-4">{current.question}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  ${option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'hobby_mime':
-        return (
-          <div className="text-center">
-            <p className="text-lg font-medium mb-4">{current.description}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'taste_challenge':
-        return (
-          <div className="text-center">
-            <p className="text-lg font-medium mb-4">{current.question}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'destination_match':
-        return (
-          <div className="text-center">
-            <p className="text-lg font-medium mb-4">Where is {current.landmark} located?</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'family_tree':
-        return (
-          <div className="text-center">
-            <p className="text-lg font-medium mb-4">{current.question}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'weather_emoji':
-        return (
-          <div className="text-center">
-            <p className="text-4xl mb-4">{current.emoji}</p>
-            <p className="text-sm text-gray-600 mb-4">What weather does this represent?</p>
-            <div className="grid grid-cols-2 gap-3">
-              {current.options.map((option, i) => (
-                <button
-                  key={i}
-                  className={optionButton}
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="text-center">
-            <p className="text-red-500">Game type not supported: {type}</p>
-          </div>
-        );
-    }
-  };
+  }, [handleSpeak, config.title]);
 
   if (completed) {
     return (
@@ -301,7 +180,125 @@ const IceBreaker = ({ lesson, onComplete, handleSpeak, currentlySpeaking }) => {
         <p className="text-gray-600 mt-1">Score: {score}/{config.items.length}</p>
       </div>
       
-      {renderQuestion()}
+      {(() => {
+        switch (type) {
+          case 'price_guess':
+            return (
+              <div className="text-center">
+                <p className="text-lg font-medium mb-4">{current.question}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      ${option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'hobby_mime':
+            return (
+              <div className="text-center">
+                <p className="text-lg font-medium mb-4">{current.description}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'taste_challenge':
+            return (
+              <div className="text-center">
+                <p className="text-lg font-medium mb-4">{current.question}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'destination_match':
+            return (
+              <div className="text-center">
+                <p className="text-lg font-medium mb-4">Where is {current.landmark} located?</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'family_tree':
+            return (
+              <div className="text-center">
+                <p className="text-lg font-medium mb-4">{current.question}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          case 'weather_emoji':
+            return (
+              <div className="text-center">
+                <p className="text-4xl mb-4">{current.emoji}</p>
+                <p className="text-sm text-gray-600 mb-4">What weather does this represent?</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {current.options.map((option, i) => (
+                    <button
+                      key={i}
+                      className={optionButton}
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+
+          default:
+            return (
+              <div className="text-center">
+                <p className="text-red-500">Game type not supported: {type}</p>
+              </div>
+            );
+        }
+      })()}
 
       <div className="mt-6 text-center">
         <div className="w-full bg-gray-200 rounded-full h-2">
