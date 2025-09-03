@@ -8,6 +8,9 @@ export const useTTS = (elevenLabsApiKey) => {
   const [selectedTTS, setSelectedTTS] = useState('browser');
   const [currentlySpeaking, setCurrentlySpeaking] = useState(null);
   const [isTTSLoading, setIsTTSLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
 
   const initializeTTS = useCallback(() => {
     const service = new RealTTSService(elevenLabsApiKey);
@@ -20,6 +23,40 @@ export const useTTS = (elevenLabsApiKey) => {
     setTtsService(service);
   }, [elevenLabsApiKey]);
 
+const startRecording = useCallback(async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    const chunks = [];
+    
+    recorder.ondataavailable = (e) => chunks.push(e.data);
+    recorder.onstop = async () => {
+      const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+      // أرسل للـ Whisper للتحويل
+      try {
+        const result = await whisperService.transcribeAudio(audioBlob);
+        onTranscriptionComplete(result.transcript, result.correction);
+      } catch (error) {
+        console.error('Transcription failed:', error);
+      }
+    };
+     
+    setMediaRecorder(recorder);
+    setAudioChunks(chunks);
+    recorder.start();
+    setIsRecording(true);
+  } catch (error) {
+    console.error('Recording failed:', error);
+  }
+}, []);
+
+const stopRecording = useCallback(() => {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    setIsRecording(false);
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+  }
+}, [mediaRecorder, isRecording]);
   const handleSpeak = useCallback(async (text, context = 'word', isOnline = true) => {
     if (!text || text.trim() === '') {
     console.error('Empty text provided for speech');

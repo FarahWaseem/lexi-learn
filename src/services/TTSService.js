@@ -60,53 +60,31 @@ export class RealTTSService {
     }
   }
 
-  speakWithBrowser(text, rate = 1, pitch = 1) {
+ speakWithBrowser(text) {
   return new Promise((resolve, reject) => {
-    if (!('speechSynthesis' in window)) {
-      console.error('Speech synthesis not supported in this browser');
-      reject('Speech synthesis not supported');
-      return;
-    }
-    // الحصول على الأصوات المتاحة أولاً
-    const voices = window.speechSynthesis.getVoices();
-    let enVoice = voices.find((v) => v.lang.startsWith('en-'));
+    // أوقف أي كلام سابق
+    window.speechSynthesis.cancel();
     
-    // إذا لم توجد أصوات بعد، ننتظر حتى يتم تحميلها
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        const updatedVoices = window.speechSynthesis.getVoices();
-        enVoice = updatedVoices.find((v) => v.lang.startsWith('en-'));
-        this.speakWithBrowserUtil(text, rate, pitch, enVoice, resolve, reject);
-      };
-    } else {
-      this.speakWithBrowserUtil(text, rate, pitch, enVoice, resolve, reject);
-    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    
+    utterance.onend = () => {
+      console.log('✅ Speech synthesis completed');
+      resolve();
+    };
+    
+    utterance.onerror = (event) => {
+      console.warn('⚠️ Speech synthesis error (non-critical):', event.error);
+      resolve(); // ✅ لا ترفض الـ promise، فقط سجل التحذير
+    };
+    
+    // انتظر قليلاً قبل البدء
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 100);
   });
 }
-// دالة مساعدة للكلام
-speakWithBrowserUtil(text, rate, pitch, voice, resolve, reject) {
-  window.speechSynthesis.cancel();
-  
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = rate;
-  utterance.pitch = pitch;
-  
-  if (voice) {
-    utterance.voice = voice;
-  }
-  
-  utterance.onend = () => {
-    console.log('Speech synthesis ended');
-    resolve();
-  };
-  
-  utterance.onerror = (event) => {
-    console.error('Speech synthesis error:', event);
-    reject(event);
-  };
-  
-  console.log('Starting speech synthesis with voice:', voice ? voice.name : 'default');
-  window.speechSynthesis.speak(utterance);
-}
-      
+
 }
