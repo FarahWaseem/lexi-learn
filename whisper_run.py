@@ -1,21 +1,23 @@
 import sys
 import whisper
+import os
 
 def main():
     if len(sys.argv) < 2:
         print("No audio file provided")
         return
-
+    
     audio_path = sys.argv[1]
-
-    # Load the Whisper model
-    model = whisper.load_model("base")  # You can change the model size if needed
-
-    # Transcribe the audio file
-    result = model.transcribe(audio_path, fp16=False)
-
-    # Print the transcription
-    print(result["text"])
+    
+    try:
+        # جرب tiny model أولاً
+        model = whisper.load_model("tiny")
+        result = model.transcribe(audio_path, fp16=False)
+        print(result["text"])
+    except Exception as e:
+        print(f"Transcription failed: {str(e)}")
+        # رجع نص فارغ إذا فشل
+        print("")
 
 if __name__ == "__main__":
     main()

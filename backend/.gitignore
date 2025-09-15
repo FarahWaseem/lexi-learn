@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Environment
+.env
+.env.local
+
+# Uploads & audio
+uploads/
+*.wav
+*.webm
+*.mp3
+*.m4a
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+nodemon.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo"venv/" 
+"uploads/" 
+-e "venv/\nuploads/" 

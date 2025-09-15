@@ -4,6 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const { exec } = require('child_process');
+const cors = require('cors');
+
 
 const app = express();
 app.use(express.json());
@@ -12,6 +14,10 @@ app.use(express.urlencoded({ extended: true }));
 const PUBLIC = path.join(__dirname, 'public');
 const UPLOADS = path.join(__dirname, 'uploads');
 app.use(express.static(PUBLIC));
+app.use(cors({
+  origin: 'http://localhost:3000', 
+  credentials: true
+}));
 
 // Storage
 if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
@@ -60,7 +66,7 @@ app.post('/api/day/:day/answer/:idx', upload.single('audio'), (req, res) => {
     .save(wavPath);
 });
 
-const PORT = 3000;
+const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
