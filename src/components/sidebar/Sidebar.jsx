@@ -1,0 +1,64 @@
+import { Link } from "react-router-dom";
+import { useState } from "react";
+import "./Sidebar.css";
+import { NavLink } from "react-router-dom";
+import DashboardIcon from "/src/assets/icons/home.svg";
+import LessonIcon from "/src/assets/icons/book.svg";
+import VocabIcon from "/src/assets/icons/book-saved.svg";
+
+export default function Sidebar() {
+  const [darkMode, setDarkMode] = useState(false);
+
+  const toggleMode = () => {
+    setDarkMode(!darkMode);
+    document.body.classList.toggle("dark-mode"); // تغيير المود على مستوى الصفحة
+  };
+
+  return (
+    <div className={`sidebar ${darkMode ? "dark" : "light"}`}>
+      {/* الجزء العلوي: الشعار + النصوص */}
+      <div className="sidebar-header">
+        <img src="/src/assets/icons/Logo.svg" alt="Logo" className="logo" />
+        <div className="header-text">
+          <span className="title">Lexil</span>
+          <span className="subtitle">Learn</span>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* الجزء الأوسط: روابط التنقل */}
+      <div className="sidebar-links">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) => (isActive ? "active-link" : "")}
+        >
+          <img src={DashboardIcon} className="icon" /> Dashboard
+        </NavLink>
+
+        <NavLink
+          to="/lesson"
+          className={({ isActive }) => (isActive ? "active-link" : "")}
+        >
+          <img src={LessonIcon} className="icon" /> Lesson
+        </NavLink>
+        <NavLink
+          to="/vocabsNotebook"
+          className={({ isActive }) => (isActive ? "active-link" : "")}
+        >
+          <img src={VocabIcon} className="icon" />
+          VocabNotebook
+        </NavLink>
+      </div>
+
+      {/* الجزء السفلي: زر تغيير المود */}
+      <div className="sidebar-footer">
+        <label className="switch">
+          <input type="checkbox" checked={darkMode} onChange={toggleMode} />
+          <span className="slider round"></span>
+        </label>
+        <span>{darkMode ? "Dark Mode" : "Light Mode"}</span>
+      </div>
+    </div>
+  );
+}
