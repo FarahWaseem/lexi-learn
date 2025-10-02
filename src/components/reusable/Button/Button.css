@@ -1,0 +1,27 @@
+.button {
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 400;
+  line-height: 21px;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.2s ease;
+}
+
+.primary {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.secondary {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.button:hover {
+  opacity: 0.9;
+}
