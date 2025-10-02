@@ -1,0 +1,24 @@
+.search-container {
+  width: 440px!important;
+  height: 48px;
+  background: var(--color-card);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-s);
+  border: 1px solid var(--color-stroke);
+  box-sizing: border-box;
+}
+
+.search-container input {
+  flex: 1;
+  min-width: 0; 
+  border: none;
+  outline: none;
+  font-size: var(--font-6);
+  color: var(--text-primary);
+}
+
+.search-container input::placeholder {
+  color: var(--text-tertiary);
+}
