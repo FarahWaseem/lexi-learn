@@ -1,0 +1,53 @@
+.vocab-card {
+  background: var(--color-card);
+  border-radius: var(--radius-s);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2xs);
+  transition: all 0.2s ease-in-out;
+}
+
+.vocab-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vocab-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3xs);
+}
+
+.vocab-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vocab-word {
+  color: var(--color-green);
+  font-size: var(--font-4);
+  font-family: var(--font-family);
+  font-weight: var(--font-bold);
+}
+
+.vocab-translation {
+  color: var(--text-secondary);
+  font-size: var(--font-6);
+  font-family: var(--font-family);
+}
+
+.vocab-sound img,
+.vocab-delete img {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.vocab-sound img:hover,
+.vocab-delete img:hover {
+  transform: scale(1.1);
+  opacity: 0.8;
+}
