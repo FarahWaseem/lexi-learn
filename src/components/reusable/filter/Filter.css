@@ -8,8 +8,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
 }
+
+.filter-overlay { z-index: 2000; }
 
 .filter-modal {
   background: var(--color-card);

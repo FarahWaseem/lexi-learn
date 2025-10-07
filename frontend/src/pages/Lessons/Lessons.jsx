@@ -8,14 +8,18 @@ import { sampleLessons } from "../../data/lessons";
 import "./Lessons.css";
 
 export default function Lessons() {
-  // ======== State Management ========
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
   const [showFilter, setShowFilter] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState([]);
+  const [selectedLesson, setSelectedLesson] = useState([]); // الحالة الأساسية
   const [order, setOrder] = useState("asc");
 
-  // ======== Lessons Data ========
+  // حالات مؤقتة للديالوج
+  const [tempSelectedLesson, setTempSelectedLesson] = useState([]);
+  const [tempOrder, setTempOrder] = useState("asc");
+
+  // ===== بيانات الدروس
   const lessons = useMemo(
     () =>
       Object.values(sampleLessons).map((lesson, idx) => ({
@@ -27,30 +31,68 @@ export default function Lessons() {
     []
   );
 
-  // ======== Filtering Logic ========
+  // ===== فلترة الدروس (باستخدام الحالات المؤقتة أثناء فتح المودال)
   const filteredLessons = useMemo(() => {
     let result = lessons.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase())
     );
-    if (selectedLesson) {
-      result = result.filter((l) => l.title.includes(selectedLesson));
+    if (tempSelectedLesson.length > 0) {
+      result = result.filter((l) => tempSelectedLesson.includes(l.title));
     }
-    if (order === "desc") {
-      result.sort((a, b) => b.title.localeCompare(a.title));
-    } else {
-      result.sort((a, b) => a.title.localeCompare(b.title));
-    }
+    result.sort((a, b) =>
+      tempOrder === "desc" ? b.id - a.id : a.id - b.id
+    );
     return result;
-  }, [lessons, search, selectedLesson, order]);
+  }, [lessons, search, tempSelectedLesson, tempOrder]);
 
-  // ======== Filter Modal Config ========
+  // فتح الفلتر
+  const openFilter = () => {
+    console.log("🟦 [Lessons] openFilter()");
+    setTempSelectedLesson([...selectedLesson]);
+    setTempOrder(order);
+    setShowFilter(true);
+  };
+
+  // تطبيق التعديلات
+  const applyFilter = () => {
+    console.log("🟩 [Lessons] applyFilter()", {
+      tempSelectedLesson,
+      tempOrder,
+    });
+    setSelectedLesson([...tempSelectedLesson]);
+    setOrder(tempOrder);
+    setShowFilter(false);
+  };
+
+  // إلغاء والرجوع للوضع السابق
+  const cancelFilter = () => {
+    console.log("🟥 [Lessons] cancelFilter() → رجوع للقيم القديمة وإغلاق");
+    setTempSelectedLesson([...selectedLesson]);
+    setTempOrder(order);
+    setShowFilter(false);
+  };
+
+  // مسح الاختيارات المؤقتة فقط (المودال يظل مفتوح)
+  const clearFilter = () => {
+    console.log("🧹 [Lessons] clearFilter() → تفريغ المؤقت");
+    setTempSelectedLesson([]);
+    // ما بنسكّر المودال
+  };
+
   const filterSections = [
     {
       title: "By Lesson",
       options: lessons.slice(0, 5).map((l) => ({
         label: l.title,
-        active: selectedLesson === l.title,
-        onClick: () => setSelectedLesson(l.title),
+        active: tempSelectedLesson.includes(l.title),
+        onClick: () => {
+          setTempSelectedLesson((prev) =>
+            prev.includes(l.title)
+              ? prev.filter((item) => item !== l.title)
+              : [...prev, l.title]
+          );
+          console.log("🏷️ [Lessons] toggle lesson chip:", l.title);
+        },
       })),
     },
     {
@@ -58,46 +100,46 @@ export default function Lessons() {
       options: [
         {
           label: "Ascending A–Z",
-          active: order === "asc",
-          onClick: () => setOrder("asc"),
+          icon: "asc",
+          active: tempOrder === "asc",
+          onClick: () => {
+            console.log("🔤 [Lessons] order → asc");
+            setTempOrder("asc");
+          },
         },
         {
           label: "Descending Z–A",
-          active: order === "desc",
-          onClick: () => setOrder("desc"),
+          icon: "desc",
+          active: tempOrder === "desc",
+          onClick: () => {
+            console.log("🔤 [Lessons] order → desc");
+            setTempOrder("desc");
+          },
         },
       ],
     },
   ];
 
-  // ======== Render ========
   return (
     <div className="lessons-page">
       <Sidebar />
-
       <div className="lessons-content">
-        {/* Toolbar */}
         <Toolbar
           searchValue={search}
           onSearchChange={setSearch}
-          onFilterClick={() => setShowFilter(true)}
+          onFilterClick={openFilter}
         />
-        {console.log("🎯 Lessons page rendered")}
 
-{showFilter && (
-  <>
-    {console.log("✅ Filter component should render now")}
-    <Filter
-      title="Filter Lessons"
-      sections={filterSections}
-      onClose={() => setShowFilter(false)}
-      onDone={() => setShowFilter(false)}
-    />
-  </>
-)}
+        {showFilter && (
+          <Filter
+            title="Filter Lessons"
+            sections={filterSections}
+            onClear={clearFilter}
+            onCancel={cancelFilter}
+            onDone={applyFilter}
+          />
+        )}
 
-
-        {/* Lessons Grid */}
         <div className="lessons-grid">
           {filteredLessons.length > 0 ? (
             filteredLessons.map((lesson) => (
@@ -112,7 +154,6 @@ export default function Lessons() {
           )}
         </div>
 
-        {/* Pagination */}
         <Pagination
           currentPage={currentPage}
           totalPages={10}
