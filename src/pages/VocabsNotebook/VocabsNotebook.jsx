@@ -4,6 +4,8 @@ import Toolbar from "../../components/reusable/Toolbar/Toolbar";
 import VocabCard from "../../components/reusable/VocabCard/VocabCard";
 import Pagination from "../../components/reusable/pagination/pagination";
 import Filter from "../../components/reusable/filter/Filter";
+import EmptyState from "../../components/reusable/EmptyState/EmptyState";
+import noResultImg from "../../assets/images/not found.png";
 import "./VocabsNotebook.css";
 
 function VocabsNotebook() {
@@ -25,12 +27,10 @@ function VocabsNotebook() {
   ]);
 
   const handleDelete = (wordToDelete) => {
-    // منطق الحذف: تحديث القائمة لإزالة الكلمة التي تطابق 'wordToDelete'
     setWordList((prev) => prev.filter((w) => w.word !== wordToDelete));
   };
 
   const filtered = useMemo(() => {
-    // **تغيير 'words' إلى 'wordList'**
     let result = wordList.filter((w) =>
       w.word.toLowerCase().includes(search.toLowerCase())
     );
@@ -46,7 +46,6 @@ function VocabsNotebook() {
     );
 
     return result;
-  // **إضافة 'wordList' إلى مصفوفة التبعيات**
   }, [wordList, search, tempLessons, tempOrder]); 
 
   const openFilter = () => {
@@ -71,7 +70,6 @@ function VocabsNotebook() {
     setTempLessons([]);
   };
 
-  // **تغيير 'words' إلى 'wordList'**
   const uniqueLessons = [...new Set(wordList.map((w) => w.lesson))]; 
 
   const filterSections = [
@@ -149,8 +147,12 @@ function VocabsNotebook() {
               />
             ))
           ) : (
-            <p className="no-words">⚠️ No words found.</p>
-          )}
+            <EmptyState
+            image={noResultImg}
+            title="No matches found"
+            message="Try searching with another word"
+           />
+           )}
         </div>
 
         <Pagination

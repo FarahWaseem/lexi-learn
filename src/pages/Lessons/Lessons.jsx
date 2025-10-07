@@ -4,6 +4,8 @@ import Toolbar from "../../components/reusable/Toolbar/Toolbar";
 import LessonCard from "../../components/reusable/lessonCard/LessonCard";
 import Pagination from "../../components/reusable/pagination/pagination";
 import Filter from "../../components/reusable/filter/Filter";
+import EmptyState from "../../components/reusable/EmptyState/EmptyState";
+import noResultImg from "../../assets/images/not found.png";
 import { sampleLessons } from "../../data/lessons";
 import "./Lessons.css";
 
@@ -12,14 +14,12 @@ export default function Lessons() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showFilter, setShowFilter] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState([]); // الحالة الأساسية
+  const [selectedLesson, setSelectedLesson] = useState([]); 
   const [order, setOrder] = useState("asc");
 
-  // حالات مؤقتة للديالوج
   const [tempSelectedLesson, setTempSelectedLesson] = useState([]);
   const [tempOrder, setTempOrder] = useState("asc");
 
-  // ===== بيانات الدروس
   const lessons = useMemo(
     () =>
       Object.values(sampleLessons).map((lesson, idx) => ({
@@ -31,7 +31,6 @@ export default function Lessons() {
     []
   );
 
-  // ===== فلترة الدروس (باستخدام الحالات المؤقتة أثناء فتح المودال)
   const filteredLessons = useMemo(() => {
     let result = lessons.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase())
@@ -45,7 +44,6 @@ export default function Lessons() {
     return result;
   }, [lessons, search, tempSelectedLesson, tempOrder]);
 
-  // فتح الفلتر
   const openFilter = () => {
     console.log("🟦 [Lessons] openFilter()");
     setTempSelectedLesson([...selectedLesson]);
@@ -53,7 +51,6 @@ export default function Lessons() {
     setShowFilter(true);
   };
 
-  // تطبيق التعديلات
   const applyFilter = () => {
     console.log("🟩 [Lessons] applyFilter()", {
       tempSelectedLesson,
@@ -64,7 +61,6 @@ export default function Lessons() {
     setShowFilter(false);
   };
 
-  // إلغاء والرجوع للوضع السابق
   const cancelFilter = () => {
     console.log("🟥 [Lessons] cancelFilter() → رجوع للقيم القديمة وإغلاق");
     setTempSelectedLesson([...selectedLesson]);
@@ -72,11 +68,9 @@ export default function Lessons() {
     setShowFilter(false);
   };
 
-  // مسح الاختيارات المؤقتة فقط (المودال يظل مفتوح)
   const clearFilter = () => {
     console.log("🧹 [Lessons] clearFilter() → تفريغ المؤقت");
     setTempSelectedLesson([]);
-    // ما بنسكّر المودال
   };
 
   const filterSections = [
@@ -141,17 +135,21 @@ export default function Lessons() {
         )}
 
         <div className="lessons-grid">
-          {filteredLessons.length > 0 ? (
-            filteredLessons.map((lesson) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                onAction={() => console.log("▶️ Clicked:", lesson)}
-              />
-            ))
-          ) : (
-            <p className="no-lessons">⚠️ No lessons found.</p>
-          )}
+        {filteredLessons.length > 0 ? (
+        filteredLessons.map((lesson) => (
+          <LessonCard
+            key={lesson.id}
+            lesson={lesson}
+           onAction={() => console.log("▶️ Clicked:", lesson)}
+           />
+        ))
+       ) : (
+        <EmptyState
+        image={noResultImg}
+        title="No matches found"
+        message="Try searching with another word"
+       />
+       )}
         </div>
 
         <Pagination

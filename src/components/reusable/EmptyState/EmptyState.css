@@ -1,0 +1,32 @@
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: var(--text-secondary);
+    gap: var(--spacing-2xs);
+    height: 100%;
+    width: 100%;
+    min-height: 60vh;
+    grid-column: 1 / -1;
+  }
+  
+  .empty-state-img {
+    width: 190px;
+    height: 244px;
+    object-fit: contain;
+  }
+  
+  .empty-state-title {
+    font-size: var(--font-4);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+  }
+  
+  .empty-state-message {
+    font-size: var(--font-6);
+    color: var(--text-tertiary);
+    font-weight: var(--font-regular);
+  }
+  
