@@ -2,8 +2,9 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/sidebar/Sidebar";
 import Lesson from "./pages/Lessons/Lesson";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import VocabsNotebook from "./pages/VocabsNotebook";
+//import LessonSession from "./pages/LessonSession/LessonSession"
 import Header from "./components/header/Header";
 import "./App.css";
 
@@ -22,6 +23,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/lesson" element={<Lesson />} />
             <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
+            {/* <Route path="/lesson/lessonSession" element={<LessonSession/>} /> */}
           </Routes>
         </main>
       </div>
