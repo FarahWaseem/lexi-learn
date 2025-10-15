@@ -1,5 +1,5 @@
+//Dashboard.jsx
 import React from "react";
-
 const Dashboard = () => {
   console.log("✅ Dashboard component rendered");
 

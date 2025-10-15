@@ -1,11 +1,14 @@
+// Header.jsx
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
-import "./Header.css"; // ملف التصميم
+import { useClerk } from "@clerk/clerk-react"; // ⬅️ لإجراء تسجيل الخروج
+import "./Header.css";
 
 function Header() {
   const location = useLocation();
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { signOut } = useClerk(); // ⬅️ دالة الخروج من Clerk
 
   // النصوص والصور حسب الصفحة
   const pageInfo = {
@@ -31,6 +34,16 @@ function Header() {
     title: "Welcome",
     subtitle: "Choose a page",
     img: "/src/assets/images/zaytoonaReadingBook.png",
+  };
+
+  // ⬅️ تسجيل الخروج + إعادة التوجيه لصفحة /login
+  const handleLogout = async () => {
+    try {
+      setIsProfileOpen(false);
+      await signOut({ redirectUrl: "/login" });
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
   };
 
   return (
@@ -85,9 +98,12 @@ function Header() {
 
           {isProfileOpen && (
             <div className="profile-dropdown">
-              <NavLink to="/login"
-              className={({ isActive }) => (isActive ? "ho" : "")}>
-                {" "}
+              {/* إعدادات (اختياري: غيري المسار لاحقًا لصفحة إعدادات حقيقية) */}
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => (isActive ? "ho" : "")}
+                onClick={() => setIsProfileOpen(false)}
+              >
                 <div className="profile-setting">
                   <img
                     src="/src/assets/icons/setting-2.svg"
@@ -98,14 +114,19 @@ function Header() {
                 </div>
               </NavLink>
 
-              <div className="profile-logout">
+              {/* زر الخروج الحقيقي */}
+              <button
+                type="button"
+                className="profile-logout"
+                onClick={handleLogout}
+              >
                 <img
                   src="/src/assets/icons/Logout icon.svg"
-                  alt="Setting"
+                  alt="Logout"
                   className="setting-img"
                 />
-                <h5>Logut</h5>
-              </div>
+                <h5>Logout</h5>
+              </button>
             </div>
           )}
         </div>

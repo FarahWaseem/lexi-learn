@@ -1,0 +1,10 @@
+.practice-wrap { padding:16px; display:flex; justify-content:center; }
+.topic-card { width:760px; background:#fff; border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.08); }
+.meta { display:flex; gap:12px; color:#777; font-size:14px; margin-bottom:6px; }
+.q { font-size:18px; margin:8px 0 12px; }
+.timer { font-size:18px; margin:8px 0; }
+.controls { display:flex; gap:10px; margin:10px 0; }
+.controls button { padding:8px 12px; border-radius:10px; border:1px solid #e6e6e6; background:#fafafa; cursor:pointer; }
+.result pre, .feedback pre { background:#f7f7f7; padding:12px; border-radius:10px; white-space:pre-wrap; }
+.footer { display:flex; justify-content:flex-end; margin-top:10px; }
+.footer button { padding:10px 16px; border-radius:10px; border:none; background:#111827; color:#fff; cursor:pointer; }

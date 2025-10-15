@@ -1,29 +1,48 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
-import SearchBar from "../../components/reusable/searchBar/SearchBar";
-import LessonCard from "../../components/reusable/lessonCard/LessonCard";
 import Pagination from "../../components/reusable/pagination/pagination";
-import { sampleLessons } from "../../data/lessons";
+import PLAN from "../../data/conversationPlan"; // ← الخطة 60 يوم
+import { isUnlocked, isCompleted } from "../../utils/progress";
+import { useNavigate } from "react-router-dom";
 import "./Lesson.css";
 
 function Lessons() {
   console.log("✅ Lessons component rendered");
 
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const lessons = Object.values(sampleLessons).map((l, idx) => ({
-    id: idx + 1,
-    title: l.topic,
-    description: l.iceBreaker.description,
-    status: idx % 2 === 0 ? "completed" : "new",
-  }));
-
-  console.log("📚 Lessons data:", lessons);
+  // حضّر كروت من PLAN
+  const lessons = useMemo(() => {
+    return PLAN.map((d) => ({
+      id: d.day,
+      title: d.topic,
+      description: `Level ${d.cefr} • 6 questions`,
+      unlocked: isUnlocked(d.day),
+      completed: isCompleted(d.day),
+    }));
+  }, []);
 
   const filtered = lessons.filter((l) =>
     l.title.toLowerCase().includes(search.toLowerCase())
   );
+
+  // باچينيشن بسيطة (اختياري): 6 كروت للصفحة
+  const pageSize = 6;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  function onClickCard(lesson) {
+    if (lesson.completed) {
+      // روح على السّمري
+      navigate(`/summary/${lesson.id}`);
+    } else if (lesson.unlocked) {
+      // ابدأ الدرس
+      navigate(`/lesson1?day=${lesson.id}`);
+    }
+    // لو Locked ما منعمل إشي
+  }
 
   return (
     <div className="lessons-page">
@@ -32,11 +51,7 @@ function Lessons() {
       <div className="lessons-content">
         <div className="toolbar">
           <div className="search-container">
-            <img
-              src="/src/assets/icons/search-normal.svg"
-              alt="search"
-              className="icon"
-            />
+            <img src="/src/assets/icons/search-normal.svg" alt="search" className="icon" />
             <input
               type="text"
               value={search}
@@ -46,23 +61,33 @@ function Lessons() {
           </div>
 
           <button className="filter-btn">
-            <img
-              src="/src/assets/icons/Sort.svg"
-              alt="filter"
-              className="icon"
-            />
+            <img src="/src/assets/icons/Sort.svg" alt="filter" className="icon" />
             Filter
           </button>
         </div>
-        
+
         <div className="lessons-grid">
-          {filtered.length > 0 ? (
-            filtered.map((lesson) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                onAction={() => console.log("▶️ Clicked:", lesson)}
-              />
+          {pageItems.length > 0 ? (
+            pageItems.map((lesson) => (
+              <div key={lesson.id} className="lesson-card">
+                <div className="lesson-card__head">Lesson {lesson.id}</div>
+                <h3 className="lesson-card__title">{lesson.title}</h3>
+                <p className="lesson-card__desc">{lesson.description}</p>
+
+                {lesson.completed ? (
+                  <button className="btn btn-dark" onClick={() => onClickCard(lesson)}>
+                    View Summary
+                  </button>
+                ) : lesson.unlocked ? (
+                  <button className="btn btn-green" onClick={() => onClickCard(lesson)}>
+                    Start Lesson
+                  </button>
+                ) : (
+                  <button className="btn btn-locked" disabled>
+                    🔒 Locked
+                  </button>
+                )}
+              </div>
             ))
           ) : (
             <p>⚠️ No lessons found.</p>
@@ -71,11 +96,8 @@ function Lessons() {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={10}
-          onPageChange={(page) => {
-            console.log("📄 Page changed:", page);
-            setCurrentPage(page);
-          }}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
         />
       </div>
     </div>
