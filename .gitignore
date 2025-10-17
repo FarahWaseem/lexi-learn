@@ -4,6 +4,8 @@ backend/node_modules/
 frontend/node_modules/
 .env
 node_modules
+uploads/
+allfiles.txt
 # Python build and cache
 backend/venv/
 backend/__pycache__/
