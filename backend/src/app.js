@@ -7,7 +7,7 @@ const app = express();
 
 // Middlewares
 app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());+
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Static folders
@@ -18,6 +18,11 @@ if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
 app.use(express.static(PUBLIC));
 
 // Routes
+app.get('/', (req, res) => {
+    res.send('✅ Backend is running successfully on port 3001');
+  });
+
 app.use('/api/day', require('./routes/audioRoutes'));
 
+  
 module.exports = app;
