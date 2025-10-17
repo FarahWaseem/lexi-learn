@@ -1,0 +1,32 @@
+# Python virtual environment
+venv/
+.venv/
+backend/venv/
+
+# Uploads
+uploads/
+backend/uploads/
+
+# Large files
+*.mp4
+*.avi
+*.mov
+*.wav
+*.mp3
+*.pdf
+*.zip
+*.rar
+
+# Dependencies
+node_modules/
+
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
+*.lib
+*.a
+*.o
