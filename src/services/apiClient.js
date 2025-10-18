@@ -1,5 +1,5 @@
 // src/services/apiClient.js
-const BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+const BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
 /** طلب عام يعيد JSON أو يرمي خطأ مفهوم */
 async function jfetch(path, { method = "GET", headers = {}, body, isForm = false } = {}) {

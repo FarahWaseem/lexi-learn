@@ -1,185 +1,174 @@
-// src/pages/Lessons/SimpleLesson.jsx
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import "./SimpleLesson.css";
+// /src/pages/lesson/SimpleLesson.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import * as api from "../../services/apiClient";
+import { connectRealtime } from "../../lib/realtime";
+import { speak, startSTT } from "../../utils/voice";
+import "./SimpleLesson.css";
 
 export default function SimpleLesson() {
     const { getToken } = useAuth();
 
-    const [dayNumber, setDayNumber] = useState(1);
+    const socketRef = useRef(null);
+    const sttRef = useRef({ stop: () => { } });
+
     const [sessionId, setSessionId] = useState(null);
+    const [dayNumber, setDayNumber] = useState(1);
 
-    const [topic, setTopic] = useState(null);
-    const [questions, setQuestions] = useState([]);
+    const [questionIdx, setQuestionIdx] = useState(null);
+    const [timerLeft, setTimerLeft] = useState(0);
 
-    const [messages, setMessages] = useState([]);
-    const [currentIdx, setCurrentIdx] = useState(0);
-    const [seconds, setSeconds] = useState(60);
-    const [isRecording, setIsRecording] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [netError, setNetError] = useState("");
+    const [messages, setMessages] = useState([]);   // {role: "ai"|"user", text}
+    const [liveText, setLiveText] = useState("");   // نص جاري أثناء الاستماع
+    const [finalText, setFinalText] = useState(""); // النص النهائي من STT
+    const [words, setWords] = useState([]);         // كلمات اليوم
+    const [finished, setFinished] = useState(false);
+    const [starting, setStarting] = useState(false);
+    const [err, setErr] = useState("");
 
-    const [sideWords, setSideWords] = useState([]);
+    // refs لتجنّب مشاكل الإغلاقات
+    const sessionRef = useRef(null);
+    const qRef = useRef(null);
+    const liveRef = useRef("");
+    const finalRef = useRef("");
 
-    const mediaStreamRef = useRef(null);
-    const mediaRecRef = useRef(null);
-    const chunksRef = useRef([]);
-    const timerRef = useRef(null);
-    const chatRef = useRef(null);
+    useEffect(() => { sessionRef.current = sessionId; }, [sessionId]);
+    useEffect(() => { qRef.current = questionIdx; }, [questionIdx]);
+    useEffect(() => { liveRef.current = liveText; }, [liveText]);
+    useEffect(() => { finalRef.current = finalText; }, [finalText]);
 
-    const currentQuestion = useMemo(
-        () => (questions.length ? questions[currentIdx] : null),
-        [questions, currentIdx]
-    );
-
+    // تنظيف عند الخروج من الصفحة
     useEffect(() => {
-        chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight, behavior: "smooth" });
-    }, [messages, currentIdx]);
+        return () => {
+            try { sttRef.current.stop?.(); } catch { }
+            try { socketRef.current?.disconnect(); } catch { }
+        };
+    }, []);
 
-    async function startMic() {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaStreamRef.current = stream;
-        const rec = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        chunksRef.current = [];
-        rec.ondataavailable = (e) => e.data?.size && chunksRef.current.push(e.data);
-        rec.onstop = handleRecordingStop;
-        mediaRecRef.current = rec;
-        rec.start();
-        setIsRecording(true);
+    function formatMMSS(s) {
+        const mm = String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0");
+        const ss = String(Math.max(0, s) % 60).padStart(2, "0");
+        return `${mm}:${ss}`;
     }
-    function stopMic() {
-        try { mediaRecRef.current?.stop(); } catch { }
-        setIsRecording(false);
-        mediaStreamRef.current?.getTracks()?.forEach((t) => t.stop());
-    }
-    async function handleRecordingStop() {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        chunksRef.current = [];
-        await uploadAnswer(blob);
-    }
-
-    useEffect(() => {
-        clearInterval(timerRef.current);
-        if (!currentQuestion || !sessionId) return;
-
-        setSeconds(60);
-        timerRef.current = setInterval(() => {
-            setSeconds((s) => {
-                if (s <= 1) {
-                    clearInterval(timerRef.current);
-                    if (isRecording) stopMic();
-                    return 0;
-                }
-                return s - 1;
-            });
-        }, 1000);
-
-        (async () => {
-            try { await startMic(); }
-            catch { setNetError("Microphone permission denied."); }
-        })();
-
-        return () => clearInterval(timerRef.current);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentQuestion, sessionId]);
 
     async function handleStart() {
         try {
-            setNetError(""); setLoading(true);
-            const token = await getToken();
-            const payload = await api.startSession({ dayNumber, token });
-            if (!payload?.session?.id) throw new Error("Start session failed (no session returned)");
+            setErr("");
+            setStarting(true);
+            setFinished(false);
+            setMessages([]);
+            setWords([]);
+            setQuestionIdx(null);
+            setTimerLeft(0);
+            setFinalText("");
+            setLiveText("");
 
-            setSessionId(payload.session.id);
-            setTopic(payload.topic || null);
-            setQuestions(payload.questions || []);
-            setCurrentIdx(0);
-            setSideWords([]);
+            // اقطع أي اتصال سابق
+            try { socketRef.current?.disconnect(); } catch { }
 
-            setMessages([
-                { id: crypto.randomUUID(), role: "assistant", text: payload.openingMessage || `Welcome! Let's start Day ${dayNumber}.` },
-                { id: crypto.randomUUID(), role: "assistant", text: payload.firstQuestion?.prompt_en || "Question 1" },
-            ]);
-        } catch (e) {
-            console.error(e); setNetError(e.message || "Network error");
-        } finally {
-            setLoading(false);
-        }
-    }
+            const s = await connectRealtime(getToken);
+            socketRef.current = s;
 
-    async function uploadAnswer(blob) {
-        if (!sessionId || !currentQuestion) return;
-        try {
-            setLoading(true); setNetError("");
-            const token = await getToken();
-
-            // placeholder
-            const placeholderId = crypto.randomUUID();
-            setMessages((m) => [...m, { id: placeholderId, role: "user", text: "(uploading your answer...)" }]);
-
-            const resp = await api.submitUtteranceAudio({
-                sessionId, dayNumber, questionIdx: currentQuestion.question_idx, blob, token,
+            // ================== أحداث قادمة من السيرفر ==================
+            s.on("system_say", ({ text }) => {
+                setMessages((m) => [...m, { role: "ai", text }]);
+                speak(text);
             });
 
-            setMessages((m) => {
-                const i = m.findIndex((x) => x.id === placeholderId);
-                const before = i >= 0 ? m.slice(0, i) : m;
-                const after = i >= 0 ? m.slice(i + 1) : [];
-                return [
-                    ...before,
-                    { id: crypto.randomUUID(), role: "user", text: resp.transcript || "(no speech)" },
-                    ...(resp?.correction?.feedback
-                        ? [{ id: crypto.randomUUID(), role: "assistant", text: resp.correction.feedback }]
-                        : []),
-                    ...after,
-                ];
+            s.on("session_ready", ({ sessionId, dayNumber }) => {
+                setSessionId(sessionId);
+                setDayNumber(dayNumber || 1);
             });
 
-            if (resp.words?.length) {
-                setSideWords((prev) => {
-                    const seen = new Set(prev.map((w) => (w.word || "").toLowerCase()));
-                    const extra = resp.words.filter((w) => !seen.has((w.word || "").toLowerCase()));
-                    return [...prev, ...extra];
+            // كلمات اليوم (10) تُرسل فور بدء اليوم
+            s.on("topic_vocab", ({ vocab }) => {
+                if (Array.isArray(vocab)) setWords(vocab);
+            });
+
+            s.on("ask_question", ({ prompt, seconds, questionIdx }) => {
+                setQuestionIdx(questionIdx);
+                setTimerLeft(seconds);
+                setFinalText("");
+                setLiveText("");
+
+                setMessages((m) => [...m, { role: "ai", text: `Q${questionIdx}: ${prompt}` }]);
+                speak(prompt);
+
+                // ابدأ STT لكتابة كلام المستخدم لحظيًا
+                try { sttRef.current.stop?.(); } catch { }
+                sttRef.current = startSTT({
+                    onPartial: (txt) => setLiveText(txt),
+                    onFinal: (txt) => setFinalText(txt),
                 });
-            }
+            });
+
+            s.on("timer", ({ left }) => setTimerLeft(left));
+
+            s.on("time_up", ({ questionIdx }) => {
+                // أوقفي الاستماع وخذي النص النهائي
+                try { sttRef.current.stop?.(); } catch { }
+                const text = (finalRef.current || liveRef.current || "").trim();
+
+                if (text) {
+                    setMessages((m) => [...m, { role: "user", text }]);
+                }
+
+                s.emit("user_final_text", {
+                    sessionId: sessionRef.current,
+                    questionIdx,
+                    text,
+                });
+            });
+
+            s.on("feedback", ({ questionIdx, transcript, correction, words: ww }) => {
+                // تجنّب تكرار رسالة المستخدم إذا كانت نفسها التي أرسلناها عند time_up
+                const likelySent = (finalRef.current || liveRef.current || "").trim();
+                const tFromServer = (transcript || "").trim();
+                if (tFromServer && tFromServer !== likelySent && !tFromServer.startsWith("(audio")) {
+                    setMessages((m) => [...m, { role: "user", text: tFromServer }]);
+                }
+
+                if (correction?.feedback) {
+                    const t = `Feedback: ${correction.feedback}`;
+                    setMessages((m) => [...m, { role: "ai", text: t }]);
+                    speak(t);
+                }
+
+                if (Array.isArray(ww) && ww.length) {
+                    setWords((prev) => {
+                        const seen = new Set(prev.map((w) => (w.word || "").toLowerCase()));
+                        const extra = ww.filter((w) => !seen.has((w.word || "").toLowerCase()));
+                        return [...prev, ...extra];
+                    });
+                }
+            });
+
+            s.on("lesson_finished", () => {
+                setFinished(true);
+                try { sttRef.current.stop?.(); } catch { }
+                setTimerLeft(0);
+                setMessages((m) => [...m, { role: "ai", text: "Great job! Lesson finished 🎉" }]);
+            });
+
+            s.on("error", ({ message }) => setErr(message || "Realtime error"));
+
+            // ابدأ اليوم
+            s.emit("start_day", { dayNumber: Number(dayNumber) || 1 });
         } catch (e) {
-            console.error(e); setNetError(e.message || "Upload failed");
+            console.error(e);
+            setErr(e?.message || "Failed to start realtime");
         } finally {
-            setLoading(false);
+            setStarting(false);
         }
     }
 
-    async function goNext() {
-        if (!questions.length) return;
-        if (isRecording) stopMic();
-        const next = currentIdx + 1;
-        if (next >= questions.length) return; // آخر سؤال
-
-        setCurrentIdx(next);
-        setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", text: questions[next].prompt_en }]);
-    }
-
-    async function finishLesson() {
+    function handleDownloadPDF() {
         if (!sessionId) return;
-        try {
-            if (isRecording) stopMic();
-            const token = await getToken();
-            await api.finishSession({ sessionId, token });
-            setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", text: "Great job! Session finished 🎉" }]);
-        } catch (e) {
-            console.error(e); setNetError(e.message || "Finish failed");
-        }
+        window.open(`http://localhost:4000/api/sessions/${sessionId}/export.pdf`, "_blank");
     }
-
-    function speak(text) {
-        const u = new SpeechSynthesisUtterance(text);
-        window.speechSynthesis.speak(u);
+    function handleDownloadAudio() {
+        if (!sessionId) return;
+        window.open(`http://localhost:4000/api/sessions/${sessionId}/export-audio`, "_blank");
     }
-
-    const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-    const ss = String(seconds % 60).padStart(2, "0");
-    const atLastQuestion = !!questions.length && currentIdx === questions.length - 1;
 
     return (
         <div className="lesson-shell">
@@ -187,100 +176,77 @@ export default function SimpleLesson() {
                 <div className="lesson-title">
                     <span className="mascot">🫒</span>
                     <div>
-                        <h1>{topic?.title_en || "Daily Lesson"}</h1>
-                        <p>{topic ? `Level ${topic.level} • ~${topic.estimated_minutes} min` : "Choose a day and press Start"}</p>
+                        <h1>Daily Lesson (Realtime)</h1>
+                        <p>Auto Q&amp;A with live transcription &amp; feedback</p>
                     </div>
                 </div>
 
                 <div className="lesson-actions">
                     <div className="day-picker">
                         <label>Day</label>
-                        <input type="number" min={1} value={dayNumber}
+                        <input
+                            type="number"
+                            min={1}
+                            value={dayNumber}
                             onChange={(e) => setDayNumber(Number(e.target.value || 1))}
-                            disabled={!!sessionId} />
+                            disabled={!!sessionId && !finished}
+                        />
                     </div>
 
                     {!sessionId ? (
-                        <button className="start-btn" onClick={handleStart} disabled={loading}>
-                            {loading ? "Starting..." : `Start Day ${dayNumber}`}
+                        <button className="start-btn" onClick={handleStart} disabled={starting}>
+                            {starting ? "Starting…" : `Start Day ${dayNumber}`}
                         </button>
-                    ) : (
+                    ) : finished ? (
                         <div className="done-actions">
-                            <button className="finish-btn" onClick={finishLesson} disabled={loading}>
-                                Finish Lesson
-                            </button>
-                            <button className="export-btn"
-                                onClick={async () => {
-                                    const token = await getToken();
-                                    await api.downloadProtected({ url: api.urls.pdf(sessionId), filename: `lesson-day-${dayNumber}.pdf`, token });
-                                }}
-                                disabled={!sessionId}>
-                                Download PDF
-                            </button>
-                            <button className="export-btn"
-                                onClick={async () => {
-                                    const token = await getToken();
-                                    await api.downloadProtected({ url: api.urls.audio(sessionId), filename: `lesson-day-${dayNumber}.mp3`, token });
-                                }}
-                                disabled={!sessionId}>
-                                Download Audio
-                            </button>
+                            <button className="export-btn" onClick={handleDownloadPDF}>Download PDF</button>
+                            <button className="export-btn" onClick={handleDownloadAudio}>Download Audio</button>
                         </div>
+                    ) : (
+                        <div className="pill">Session: {sessionId.slice(0, 8)}…</div>
                     )}
                 </div>
             </div>
 
             <div className="lesson-body">
                 <section className="chat-area">
-                    <div className="bubbles" ref={chatRef}>
-                        {messages.map((m) => (
-                            <div key={m.id} className={`bubble ${m.role}`}>
+                    <div className="bubbles">
+                        {messages.map((m, i) => (
+                            <div key={i} className={`bubble ${m.role}`}>
                                 <div className="text">{m.text}</div>
                             </div>
                         ))}
 
-                        {sessionId && currentQuestion && (
-                            <div className="center-question">
-                                <div className="timer">⏳ {mm}:{ss}</div>
-                                <h3 onClick={() => speak(currentQuestion.prompt_en)} title="Speak question">
-                                    {currentQuestion.prompt_en}
-                                </h3>
+                        {!finished && questionIdx != null && (
+                            <div className="bubble typing">
+                                <div className="text">
+                                    <strong>You (live):</strong>{" "}
+                                    {liveText || <em>…listening</em>}
+                                </div>
+                                <div className="timer">⏳ {formatMMSS(timerLeft)}</div>
                             </div>
                         )}
 
-                        {netError && <div className="net-error">⚠ {netError}</div>}
-                    </div>
-
-                    <div className="composer">
-                        <button className={`mic ${isRecording ? "on" : ""}`}
-                            onClick={() => (isRecording ? stopMic() : startMic())}
-                            disabled={!sessionId || !currentQuestion}
-                            title={isRecording ? "Stop & send" : "Record"}>
-                            🎙️ {isRecording ? "Stop" : "Record"}
-                        </button>
-
-                        <button className="next" onClick={goNext}
-                            disabled={!sessionId || !currentQuestion || atLastQuestion}>
-                            Next
-                        </button>
+                        {err && <div className="net-error">⚠ {err}</div>}
                     </div>
                 </section>
 
                 <aside className="vocab">
                     <div className="vocab-head">
-                        <strong>Vocabs notebook</strong>
-                        <span className="count">{sideWords.length} words</span>
+                        <strong>Words</strong>
+                        <span className="count">{words.length}</span>
                     </div>
-                    {sideWords.length ? (
+                    {words.length ? (
                         <ul className="vocab-list">
-                            {sideWords.map((w) => (
-                                <li key={w.word} className="vocab-item">
+                            {words.map((w, i) => (
+                                <li key={`${w.word}-${i}`} className="vocab-item">
                                     <div>
-                                        <b>{w.word}</b>{w.ipa ? <span className="ipa"> /{w.ipa}/</span> : null}
+                                        <b>{w.word}</b>
+                                        {w.ipa ? <span className="ipa"> /{w.ipa}/</span> : null}
                                         {w.meaning ? <div className="meaning">{w.meaning}</div> : null}
                                         {w.example ? <div className="ex">“{w.example}”</div> : null}
                                     </div>
-                                    <button className="speak" onClick={() => speak(w.word)} title="Pronounce">🔊</button>
+                                    <button className="speak" onClick={() => speak(w.word || "")} title="Pronounce">🔊</button>
                                 </li>
                             ))}
                         </ul>

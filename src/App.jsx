@@ -74,7 +74,7 @@ function AutoUpsert() {
           return;
         }
 
-        const url = "http://localhost:3000/api/me";
+        const url = "http://localhost:4000/api/me";
         console.log("🔸 calling", url, "with token:", token.slice(0, 12) + "...");
 
         const res = await fetch(url, {

@@ -1,4 +1,4 @@
-// server.js (schema-aligned)
+// server.js (schema-aligned + Realtime WS + text correction)
 require("dotenv").config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const fetch = require("node-fetch");
@@ -8,17 +8,40 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const http = require("http");                     // ✅ WS server
 const { exec } = require("child_process");
-const multer = require("multer");            // ✅ fixed
+const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
 
 const { requireAuth, getAuth } = require("@clerk/express");
 const { Pool } = require("pg");
 
+// (اختياري) توثيق توكن WS عبر Clerk
+let verifyToken = null;
+try {
+  ({ verifyToken } = require("@clerk/clerk-sdk-node"));
+} catch {
+  console.warn("ℹ️ @clerk/clerk-sdk-node not installed. You can set SKIP_WS_AUTH=1 for dev.");
+}
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const server = http.createServer(app);            // ✅ استخدم http + io
+const { Server: IOServer } = require("socket.io");
+const io = new IOServer(server, {
+  cors: { origin: /^http:\/\/(localhost|127\.0\.0\.1):\d+$/, credentials: true },
+});
+
+const PORT = process.env.PORT || 4000;
 const PUBLIC = path.join(__dirname, "public");
 const UPLOADS = path.join(__dirname, "uploads");
+
+// ====== Topics seed (60 days × 6 questions × 10 vocab) ======
+let topicsSeed = [];
+try {
+  topicsSeed = require(path.join(__dirname, "topics.json"));
+} catch {
+  console.warn("⚠️ topics.json not found. Will fallback to defaults.");
+}
 
 // ---------- Middleware / CORS / Logs ----------
 app.use((req, _res, next) => {
@@ -44,10 +67,10 @@ app.use(express.static(PUBLIC));
 
 // ---------- DB ----------
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // تأكدي من المنفذ 5433 لو محلي
+  connectionString: process.env.DATABASE_URL,
 });
 
-// users table (لو ما عندك schema كامل)
+// users table (اختياري)
 pool.query(`
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
@@ -68,26 +91,24 @@ function authUser(req) {
   return userId;
 }
 
-// احضار topic + أسئلته أو انشاء افتراضي
+// احضار topic + أسئلته (من topics.json إن وُجد) أو انشاء افتراضي
 async function getOrCreateTopicWithQuestions(dayNumber) {
-  // 1) احضار أو إنشاء topic
+  const day = topicsSeed.find((t) => t.day_number === Number(dayNumber));
+  const title = day?.title_en || `Daily Conversation Day ${dayNumber}`;
+  const level = day?.level || (dayNumber <= 10 ? "A1" : dayNumber <= 20 ? "A2" : dayNumber <= 40 ? "B1" : "B2");
+  const est = day?.estimated_minutes ?? 10;
+
   const topicIns = await pool.query(
     `INSERT INTO daily_topics (day_number, title_en, level, estimated_minutes)
      VALUES ($1,$2,$3,$4)
      ON CONFLICT (day_number) DO NOTHING
      RETURNING *`,
-    [
-      dayNumber,
-      `Daily Conversation Day ${dayNumber}`,
-      dayNumber <= 10 ? "A1" : dayNumber <= 20 ? "A2" : dayNumber <= 40 ? "B1" : "B2",
-      10,
-    ]
+    [dayNumber, title, level, est]
   );
   const topic =
     topicIns.rows[0] ||
     (await pool.query(`SELECT * FROM daily_topics WHERE day_number=$1 LIMIT 1`, [dayNumber])).rows[0];
 
-  // 2) أسئلة
   const existingQ = await pool.query(
     `SELECT question_idx, prompt_en
      FROM topic_questions
@@ -95,16 +116,19 @@ async function getOrCreateTopicWithQuestions(dayNumber) {
      ORDER BY question_idx ASC`,
     [topic.id]
   );
-  if (existingQ.rows.length) return { topic, questions: existingQ.rows };
+  if (existingQ.rows.length) {
+    return { topic, questions: existingQ.rows, vocab: day?.vocab || [] };
+  }
 
-  const defaults = [
-    "Warm-up: In one sentence, what is today's topic about?",
-    "Share a short example from your life related to the topic.",
-    "Describe a problem related to the topic and a simple solution.",
-    "Give your opinion about the topic with one reason.",
-    "Compare two options related to the topic (2–3 sentences).",
-    "Closing: Summarize your main point in one sentence.",
-  ];
+  const defaults =
+    (day?.questions || []).map((q) => q.prompt_en) || [
+      "Warm-up: In one sentence, what is today's topic about?",
+      "Share a short example from your life related to the topic.",
+      "Describe a problem related to the topic and a simple solution.",
+      "Give your opinion about the topic with one reason.",
+      "Compare two options related to the topic (2–3 sentences).",
+      "Closing: Summarize your main point in one sentence.",
+    ];
   for (let i = 0; i < defaults.length; i++) {
     await pool.query(
       `INSERT INTO topic_questions (topic_id, question_idx, prompt_en)
@@ -117,7 +141,7 @@ async function getOrCreateTopicWithQuestions(dayNumber) {
     `SELECT question_idx, prompt_en FROM topic_questions WHERE topic_id=$1 ORDER BY question_idx`,
     [topic.id]
   );
-  return { topic, questions: qrows.rows };
+  return { topic, questions: qrows.rows, vocab: day?.vocab || [] };
 }
 
 async function generateCorrectionAndWords(text) {
@@ -144,7 +168,7 @@ Learner answer: """${text}"""
   try {
     const resp = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" +
-        apiKey,
+      apiKey,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,18 +192,7 @@ Learner answer: """${text}"""
   }
 }
 
-async function upsertVocabWords(userId, words) {
-  if (!Array.isArray(words) || !words.length) return;
-  for (const w of words) {
-    await pool.query(
-      `INSERT INTO vocab_items (user_id, word, ipa, meaning, example)
-       VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
-      [userId, w.word || "", w.ipa || "", w.meaning || "", w.example || ""]
-    );
-  }
-}
-
-// helpers للتوافق مع اختلاف أسماء الأعمدة
+// helpers للتوافق مع اختلاف أسماء الأعمدة (تستخدمها مسارات الصوت)
 async function insertRecordingFlexible({ userId, sessionId, questionIdx, filePath, mimeType }) {
   try {
     await pool.query(
@@ -195,7 +208,6 @@ async function insertRecordingFlexible({ userId, sessionId, questionIdx, filePat
     );
   }
 }
-
 async function insertUtteranceFlexible({ sessionId, questionIdx, transcript }) {
   try {
     const u = await pool.query(
@@ -214,7 +226,18 @@ async function insertUtteranceFlexible({ sessionId, questionIdx, transcript }) {
   }
 }
 
-// ---------- Basic routes ----------
+async function upsertVocabWords(userId, words) {
+  if (!Array.isArray(words) || !words.length) return;
+  for (const w of words) {
+    await pool.query(
+      `INSERT INTO vocab_items (user_id, word, ipa, meaning, example)
+       VALUES ($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
+      [userId, w.word || "", w.ipa || "", w.meaning || "", w.example || ""]
+    );
+  }
+}
+
+// ---------- Basic REST routes ----------
 app.get("/", (_req, res) => res.json({ ok: true, service: "lexi backend" }));
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
@@ -255,25 +278,20 @@ app.get("/api/me", requireAuth(), async (req, res) => {
 app.get("/api/day/:day", async (req, res) => {
   try {
     const dayNumber = Number(req.params.day) || 1;
-    const { topic, questions } = await getOrCreateTopicWithQuestions(dayNumber);
-    res.json({ topic, questions });
+    const { topic, questions, vocab } = await getOrCreateTopicWithQuestions(dayNumber);
+    res.json({ topic, questions, vocab });
   } catch (e) {
     res.status(500).json({ error: e.message || "failed" });
   }
 });
 
 // ---------- Sessions API ----------
-
-// 1) Start session
 const startHandler = async (req, res) => {
   try {
     const userId = authUser(req);
     const dayNumber = Number(req.body?.dayNumber) || 1;
-
-    // Topic + Questions (ensures topic exists)
     const { topic, questions } = await getOrCreateTopicWithQuestions(dayNumber);
 
-    // Create/activate session with topic_id ONLY (no day_number column)
     const s = await pool.query(
       `INSERT INTO sessions (user_id, topic_id, started_at, status)
        VALUES ($1,$2,NOW(),'active')
@@ -301,7 +319,7 @@ const startHandler = async (req, res) => {
   }
 };
 app.post("/api/sessions/start", requireAuth(), startHandler);
-app.post("/api/sessions", requireAuth(), startHandler); // optional alias
+app.post("/api/sessions", requireAuth(), startHandler); // alias
 
 // Multer for audio
 const audioStorage = multer.diskStorage({
@@ -310,7 +328,7 @@ const audioStorage = multer.diskStorage({
 });
 const audioUpload = multer({ storage: audioStorage });
 
-// 2) Upload audio
+// 2) Upload audio (كما هو)
 app.post("/api/utterances/audio", requireAuth(), audioUpload.single("audio"), async (req, res) => {
   try {
     const userId = authUser(req);
@@ -328,14 +346,15 @@ app.post("/api/utterances/audio", requireAuth(), audioUpload.single("audio"), as
     });
 
     const transcript = await new Promise((resolve) => {
-      exec(`python whisper_run.py "${wavPath}"`, (error, stdout, stderr) => {
-        if (error) {
-          console.warn("Whisper failed:", error.message, stderr);
-          return resolve("(audio received)");
-        }
-        resolve((stdout || "").toString().trim() || "(no speech)");
-      });
-    });
+      // exec(`python whisper_run.py "${wavPath}"`, (error, stdout, stderr) => {
+      //   if (error) {
+      //     console.warn("Whisper failed:", error.message, stderr);
+      //     return resolve("(audio received)");
+      //   }
+      //   resolve((stdout || "").toString().trim() || "(no speech)");
+      // });
+    }
+  );
 
     await insertRecordingFlexible({
       userId,
@@ -365,6 +384,37 @@ app.post("/api/utterances/audio", requireAuth(), audioUpload.single("audio"), as
   } catch (e) {
     console.error("POST /api/utterances/audio", e);
     res.status(500).json({ error: e.message || "upload failed" });
+  }
+});
+
+// ✅ 2-bis) تصحيح نصّي بدون صوت (للريل تايم)
+app.post("/api/utterances/text", requireAuth(), async (req, res) => {
+  try {
+    const userId = authUser(req);
+    const { sessionId, questionIdx, text } = req.body || {};
+    if (!sessionId || !questionIdx) return res.status(400).json({ error: "sessionId, questionIdx required" });
+
+    // خزّن كـ utterance على السكيمة الحالية
+    const utter = await insertUtteranceFlexible({
+      sessionId,
+      questionIdx: Number(questionIdx),
+      transcript: String(text || ""),
+    });
+
+    const { feedback, mistakes, words } = await generateCorrectionAndWords(String(text || ""));
+
+    await pool.query(
+      `INSERT INTO corrections (utterance_id, feedback, mistakes_json, created_at)
+       VALUES ($1,$2,$3,NOW())
+       ON CONFLICT DO NOTHING`,
+      [utter.id, feedback, JSON.stringify(mistakes || [])]
+    );
+
+    await upsertVocabWords(userId, Array.isArray(words) ? words : []);
+    res.json({ transcript: text || "", correction: { feedback, mistakes }, words });
+  } catch (e) {
+    console.error("POST /api/utterances/text", e);
+    res.status(500).json({ error: e.message || "text correction failed" });
   }
 });
 
@@ -521,13 +571,136 @@ app.post("/api/day/:day/answer/:idx", upload.single("audio"), (req, res) => {
     .toFormat("wav")
     .on("error", (err) => res.status(500).json({ error: "Audio conversion failed", details: err.message }))
     .on("end", () => {
-      exec(`python whisper_run.py "${wavPath}"`, (error, stdout) => {
-        if (error) return res.status(500).json({ error: "Whisper transcription failed", details: error.message });
-        const transcript = (stdout || "").toString().trim();
-        res.json({ transcript });
-      });
+      // exec(`python whisper_run.py "${wavPath}"`, (error, stdout) => {
+      //   if (error) return res.status(500).json({ error: "Whisper transcription failed", details: error.message });
+      //   const transcript = (stdout || "").toString().trim();
+      //   res.json({ transcript });
+      // });
     })
     .save(wavPath);
+});
+
+// ---------- Realtime WS ----------
+
+// (اختياري) توثيق WS عبر Clerk token. للتجربة المحلية ضعي SKIP_WS_AUTH=1
+io.use(async (socket, next) => {
+  if (process.env.SKIP_WS_AUTH === "1") {
+    socket.data.userId = "dev-user";
+    try {
+      await pool.query(
+        `INSERT INTO users (id, email, first_name, last_name)
+         VALUES ($1,$2,$3,$4)
+         ON CONFLICT (id) DO NOTHING`,
+        ["dev-user", "dev@local", "Dev", "User"]
+      );
+    } catch (_) {}
+    return next();
+  }
+  try {
+    const token =
+      socket.handshake.auth?.token ||
+      (socket.handshake.headers?.authorization || "").replace(/^Bearer\s+/i, "");
+    if (!token || !verifyToken) throw new Error("Missing token or clerk sdk not installed");
+    const session = await verifyToken(token, {
+      jwtKey: process.env.CLERK_JWT_KEY,
+      authorizedParties: [process.env.CLERK_AUD].filter(Boolean),
+    });
+    if (!session?.sub) throw new Error("Invalid token");
+    socket.data.userId = session.sub;
+    next();
+  } catch (e) {
+    next(e);
+  }
+});
+
+io.on("connection", (socket) => {
+  // يبدأ اليوم بالكامل (تحفيز → موضوع → Q1 … Q6)
+  socket.on("start_day", async ({ dayNumber = 1 }) => {
+    try {
+      const userId = socket.data.userId || "dev-user";
+      const { topic, questions, vocab } = await getOrCreateTopicWithQuestions(Number(dayNumber));
+
+      const s = await pool.query(
+        `INSERT INTO sessions (user_id, topic_id, started_at, status)
+         VALUES ($1,$2,NOW(),'active')
+         ON CONFLICT (user_id, topic_id)
+         DO UPDATE SET started_at = NOW(), status='active'
+         RETURNING *`,
+        [userId, topic.id]
+      );
+      const session = s.rows[0];
+
+      io.to(socket.id).emit("system_say", { text: "Awesome! Great decision to study today." });
+      io.to(socket.id).emit("system_say", { text: `Day ${topic.day_number} — Topic: ${topic.title_en} (Level ${topic.level}).` });
+      io.to(socket.id).emit("session_ready", { sessionId: session.id, dayNumber: topic.day_number });
+      io.to(socket.id).emit("topic_vocab", { dayNumber: topic.day_number, vocab: Array.isArray(vocab) ? vocab : [] });
+
+      const askWithTimer = async (qIndex) => {
+        const q = questions.find((x) => x.question_idx === qIndex);
+        if (!q) {
+          io.to(socket.id).emit("lesson_finished", { sessionId: session.id });
+          return;
+        }
+        io.to(socket.id).emit("ask_question", {
+          sessionId: session.id,
+          questionIdx: qIndex,
+          prompt: q.prompt_en,
+          seconds: 60, // كل سؤال 60 ثانية
+        });
+
+        let left = 60;
+        const timer = setInterval(() => {
+          left -= 1;
+          io.to(socket.id).emit("timer", { questionIdx: qIndex, left });
+          if (left <= 0) {
+            clearInterval(timer);
+            io.to(socket.id).emit("time_up", { questionIdx: qIndex });
+          }
+        }, 1000);
+      };
+
+      await askWithTimer(1);
+
+      // يستلم النص النهائي من الواجهة بعد انتهاء الدقيقة ويصحّحه ثم ينتقل للسؤال التالي
+      socket.on("user_final_text", async ({ sessionId, questionIdx, text }) => {
+        try {
+          // نخزّن كـ utterance + correction على السكيمة الحالية
+          const utter = await insertUtteranceFlexible({
+            sessionId,
+            questionIdx: Number(questionIdx),
+            transcript: String(text || ""),
+          });
+
+          const { feedback, mistakes, words } = await generateCorrectionAndWords(String(text || ""));
+
+          await pool.query(
+            `INSERT INTO corrections (utterance_id, feedback, mistakes_json, created_at)
+             VALUES ($1,$2,$3,NOW())
+             ON CONFLICT DO NOTHING`,
+            [utter.id, feedback, JSON.stringify(mistakes || [])]
+          );
+
+          if (Array.isArray(words) && words.length) {
+            await upsertVocabWords(userId, words);
+          }
+
+          io.to(socket.id).emit("feedback", {
+            questionIdx,
+            transcript: text || "",
+            correction: { feedback, mistakes },
+            words: Array.isArray(words) ? words : [],
+          });
+
+          if (questionIdx < 6) await askWithTimer(questionIdx + 1);
+          else io.to(socket.id).emit("lesson_finished", { sessionId });
+        } catch (e) {
+          io.to(socket.id).emit("error", { message: e.message || "text correction failed" });
+        }
+      });
+    } catch (e) {
+      io.to(socket.id).emit("error", { message: e.message || "start_day_failed" });
+    }
+  });
 });
 
 // ---------- Error handler & Start ----------
@@ -536,6 +709,6 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ ok: false, error: err.message || "server_error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server + WebSocket running at http://localhost:${PORT}`);
 });
