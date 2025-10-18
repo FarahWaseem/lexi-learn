@@ -1,9 +1,9 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/sidebar/Sidebar";
-import Lesson from "./pages/Lessons/Lesson";
+import Lesson from "./pages/Lessons/Lessons";
 import Dashboard from "./pages/Dashboard";
-import VocabsNotebook from "./pages/VocabsNotebook";
+import VocabsNotebook from "./pages/VocabsNotebook/VocabsNotebook";
 import Header from "./components/header/Header";
 import "./App.css";
 
