@@ -1,6 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useRef } from "react";
-import Practice from "./pages/Practice";
+// import Practice from "./pages/Practice";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/sidebar/Sidebar";
 import Lesson from "./pages/Lessons/Lesson";
@@ -36,8 +36,8 @@ function App() {
               <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
               <Route path="/login" element={<Navigate to="/dashboard" />} />
               <Route path="/signup" element={<Navigate to="/dashboard" />} />
-              <Route path="/practice" element={<Practice />} />
-              <Route path="/practice" element={<Practice />} />;
+              <Route path="/Lesson" element={<Lesson />} />
+              <Route path="/Lesson" element={<Lesson />} />;
 <Route path="/summary/:day" element={<Summary />} />
               <Route path="/lesson1" element={<SimpleLesson />} />;
             </Routes>
