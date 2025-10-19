@@ -1,197 +1,37 @@
 .dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-l);
-    padding: var(--spacing-m);
-    background: var(--color-background);
-    height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Top section */
+.dashboard__top {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Middle cards */
+.dashboard__middle {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr;
+  gap: 24px;
+}
+
+/* Bottom section */
+.dashboard__bottom {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .dashboard__middle,
+  .dashboard__bottom {
+    grid-template-columns: 1fr;
   }
-  
-  /* ---------- Top Section ---------- */
-  .top-section {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-m);
-  }
-  
-  .card {
-    background: var(--color-card);
-    border-radius: var(--radius-m);
-    box-shadow: var(--shadow-card);
-    padding: var(--spacing-m);
-  }
-  
-  .card-primary {
-    background: var(--color-green);
-    color: var(--text-on-primary);
-    border-radius: var(--radius-m);
-    padding: var(--spacing-m);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-  
-  .welcome-card {
-    flex: 1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .heading {
-    font-size: var(--font-4);
-    font-weight: var(--font-bold);
-    color: var(--text-primary);
-  }
-  
-  .heading-white {
-    font-size: var(--font-4);
-    font-weight: var(--font-bold);
-    color: var(--text-on-primary);
-  }
-  
-  .stats {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-    margin-top: var(--spacing-s);
-  }
-  
-  .stat-number {
-    font-size: var(--font-4);
-    font-weight: var(--font-bold);
-    color: var(--text-primary);
-  }
-  
-  .stat-label {
-    font-size: var(--font-6);
-    color: var(--text-secondary);
-  }
-  
-  .divider {
-    width: 1px;
-    height: 40px;
-    background: var(--color-stroke);
-  }
-  
-  .mascot {
-    width: 120px;
-    height: auto;
-  }
-  
-  .goal-card {
-    width: 200px;
-    text-align: center;
-  }
-  
-  .progress {
-    width: 100px;
-    height: 100px;
-    margin: 0 auto;
-  }
-  
-  .goal-text {
-    margin-top: var(--spacing-s);
-    font-size: var(--font-5);
-    color: var(--text-secondary);
-  }
-  
-  /* ---------- Middle Section ---------- */
-  .middle-section {
-    display: flex;
-    gap: var(--spacing-m);
-  }
-  
-  .start-btn {
-    margin-top: var(--spacing-s);
-    background: var(--color-black2);
-    color: var(--text-on-primary);
-    border: 1px solid #096930;
-    border-radius: var(--radius-m);
-    padding: 12px 24px;
-    font-weight: var(--font-medium);
-    font-size: var(--font-6);
-    cursor: pointer;
-  }
-  
-  .practice-reminder {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-s);
-  }
-  
-  .zaytoona-small {
-    width: 48px;
-    height: auto;
-  }
-  
-  .body-text {
-    color: var(--text-primary);
-    font-size: var(--font-6);
-    line-height: 24px;
-  }
-  
-  .streak-card {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-  
-  .streak-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-  }
-  
-  .streak-icon {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .streak-days {
-    color: var(--color-green);
-    font-size: var(--font-2);
-    font-weight: var(--font-bold);
-  }
-  
-  .streak-desc {
-    color: var(--text-secondary);
-    font-size: var(--font-6);
-  }
-  
-  /* ---------- Bottom Section ---------- */
-  .bottom-section {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr;
-    gap: var(--spacing-m);
-  }
-  
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .see-all {
-    color: var(--text-tertiary);
-    font-size: var(--font-6);
-    text-decoration: none;
-  }
-  
-  .empty-state {
-    text-align: center;
-    color: var(--text-tertiary);
-    font-size: var(--font-6);
-    padding: var(--spacing-s);
-  }
-  
-  .empty-state img {
-    width: 100px;
-    opacity: 0.9;
-    margin-bottom: var(--spacing-xs);
-  }
-  
-  .week-label {
-    color: var(--text-tertiary);
-    font-size: var(--font-6);
-  }  
+}

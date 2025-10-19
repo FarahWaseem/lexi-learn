@@ -1,0 +1,35 @@
+.streak-card {
+  flex: 0.8;
+  background: var(--color-card);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-l);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-s);
+}
+
+.streak-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.streak-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.streak-days {
+  color: var(--color-green);
+  font-size: var(--font-3);
+  font-weight: var(--font-bold);
+  margin: 0;
+}
+
+.streak-desc {
+  font-size: var(--font-6);
+  color: var(--text-secondary);
+  margin: 0;
+}

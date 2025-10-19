@@ -1,0 +1,28 @@
+.practice-reminder-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: var(--color-card);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-l);
+  gap: var(--spacing-s);
+}
+
+.reminder-icon {
+  width: 60px;
+  height: auto;
+}
+
+.reminder-text h4 {
+  font-size: var(--font-4);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.reminder-text p {
+  font-size: var(--font-6);
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}

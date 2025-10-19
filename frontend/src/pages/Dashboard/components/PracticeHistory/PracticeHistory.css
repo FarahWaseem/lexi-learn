@@ -1,0 +1,23 @@
+.practice-history {
+  background: var(--color-card);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-l);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-m);
+}
+
+.week-label {
+  color: var(--text-tertiary);
+  font-size: var(--font-6);
+}
+
+.recharts-tooltip-label {
+  color: var(--text-primary);
+  font-size: var(--font-6);
+}

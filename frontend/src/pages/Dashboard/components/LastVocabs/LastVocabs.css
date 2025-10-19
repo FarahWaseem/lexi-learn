@@ -1,0 +1,33 @@
+.last-vocabs {
+  background: var(--color-card);
+  border-radius: var(--radius-l);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-l);
+}
+
+.vocab-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.vocab-list li {
+  font-size: var(--font-6);
+  color: var(--text-primary);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: var(--font-6);
+  padding: var(--spacing-s);
+}
+
+.empty-state img {
+  width: 100px;
+  opacity: 0.9;
+  margin-bottom: var(--spacing-xs);
+}

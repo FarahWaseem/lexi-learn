@@ -1,0 +1,29 @@
+.next-lesson-card {
+  flex: 1;
+  background: var(--color-green);
+  color: var(--text-on-primary);
+  border-radius: var(--radius-l);
+  padding: var(--spacing-l);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--spacing-m);
+  box-shadow: var(--shadow-card);
+}
+
+.lesson-title {
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  margin: 0;
+}
+
+.start-btn {
+  background: var(--color-black2);
+  border: 1px solid #096930;
+  color: var(--text-on-primary);
+  border-radius: var(--radius-m);
+  padding: 12px 24px;
+  font-size: var(--font-6);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+}
