@@ -1,0 +1,33 @@
+.button {
+  border: none;
+  border-radius: var(--radius-s);
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: var(--font-6);
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+  font-weight: var(--font-medium);
+}
+
+/* Primary (Done) */
+.button.primary {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.button.primary:hover {
+  background: #006330;
+}
+
+/* Secondary (Cancel) */
+.button.secondary {
+  background: transparent;
+  border: 1px solid var(--color-stroke);
+  color: var(--text-tertiary);
+}
+
+.button.secondary:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.02);
+}

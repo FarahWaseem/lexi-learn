@@ -1,0 +1,74 @@
+.lesson-card {
+  background: var(--color-card);
+  border-radius: var(--radius-s);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--spacing-2xs);
+  transition: all 0.2s ease-in-out;
+}
+
+.lesson-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lesson-number {
+  color: var(--text-primary);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  font-family: var(--font-family);
+  margin: 0;
+  line-height: 36px;
+}
+
+.lesson-title {
+  color: var(--text-primary);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  margin: 0;
+}
+
+.lesson-description {
+  color: var(--text-secondary);
+  font-size: var(--font-6);
+  font-family: var(--font-family);
+  line-height: 24px;
+  flex-grow: 1;
+}
+
+.lesson-btn {
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: var(--font-7);
+  font-family: var(--font-family);
+  transition: all 0.2s;
+}
+
+.lesson-btn.start {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.lesson-btn.start:hover {
+  background: #006330;
+}
+
+.lesson-btn.summary {
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.lesson-btn.summary:hover {
+  opacity: 0.85;
+}
