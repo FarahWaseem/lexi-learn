@@ -1,0 +1,42 @@
+version: '1.0.0'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lexi-learn-db
+    environment:
+      POSTGRES_DB: lexi_learn
+      POSTGRES_USER: lexi_user
+      POSTGRES_PASSWORD: lexi_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - lexi-network
+
+  backend:
+    build: .
+    container_name: lexi-learn-backend
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://lexi_user:lexi_password@postgres:5432/lexi_learn
+      JWT_SECRET: your-super-secret-jwt-key-here
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - lexi-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  lexi-network:
+    driver: bridge
