@@ -1,35 +1,53 @@
 .streak-card {
-  flex: 0.8;
-  background: var(--color-card);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-l);
+  width: 100%;
+  background: var(--Colors-Basic-Card, #ffffff);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: var(--spacing-s);
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: var(--shadow-card, none);
 }
 
 .streak-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
+  justify-content: flex-start;
+  gap: 8px;
 }
 
 .streak-icon {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
+}
+
+.streak-header h4 {
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 24px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 700;
+  line-height: 36px;
+  margin: 0;
 }
 
 .streak-days {
-  color: var(--color-green);
-  font-size: var(--font-3);
-  font-weight: var(--font-bold);
+  align-self: stretch;
+  color: var(--Colors-Brand-Green-Green, #007A3D);
+  font-size: 32px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 700;
+  line-height: 51px;
   margin: 0;
 }
 
 .streak-desc {
-  font-size: var(--font-6);
-  color: var(--text-secondary);
+  align-self: stretch;
+  color: var(--Colors-Text-Secondary, rgba(0, 0, 0, 0.60));
+  font-size: 16px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 400;
+  line-height: 24px;
   margin: 0;
 }

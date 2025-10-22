@@ -1,33 +1,101 @@
 .last-vocabs {
-  background: var(--color-card);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-l);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+
+.last-vocabs__header .heading {
+  font-family: "DM Sans", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 32px;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
 }
 
 .vocab-list {
   list-style: none;
-  padding: 0;
   margin: 0;
-  display: flex;
+  padding: 0;
+  display: flex;              
   flex-direction: column;
-  gap: var(--spacing-xs);
+  justify-content: space-between; 
+  flex: 1;                    
+  gap: 0;                     
 }
 
-.vocab-list li {
-  font-size: var(--font-6);
-  color: var(--text-primary);
+
+.vocab-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.vocab-list__word-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.speaker-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.speaker-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.vocab-list__en-word {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+.vocab-list__ar-word {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  text-align: right;
+  direction: rtl;
+  flex-shrink: 0;
 }
 
 .empty-state {
   text-align: center;
-  color: var(--text-tertiary);
-  font-size: var(--font-6);
-  padding: var(--spacing-s);
+  color: rgba(0, 0, 0, 0.6);
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
 }
 
 .empty-state img {
-  width: 100px;
+  width: 96px;
+  height: 96px;
   opacity: 0.9;
-  margin-bottom: var(--spacing-xs);
 }

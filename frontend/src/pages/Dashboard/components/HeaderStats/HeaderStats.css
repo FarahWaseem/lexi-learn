@@ -1,75 +1,99 @@
 .header-stats {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.header-card {
+  flex: 1;
+  background: var(--Colors-Basic-Card, white);
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--color-card);
-  border-radius: var(--radius-l);
-  padding: var(--spacing-l);
-  box-shadow: var(--shadow-card);
-  gap: var(--spacing-l);
 }
 
-.header-left {
-  flex: 1;
+.header-info {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-s);
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .welcome-title {
-  font-size: var(--font-3);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 24px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 700;
+  line-height: 36px;
 }
 
 .stats-row {
   display: flex;
+  justify-content: flex-start;
   align-items: center;
-  gap: var(--spacing-m);
+  gap: 16px;
 }
 
 .stat-item {
+  padding: 0 8px;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   align-items: flex-start;
+  gap: 16px;
 }
 
 .stat-item strong {
-  font-size: var(--font-4);
-  font-weight: var(--font-bold);
-  color: var(--text-primary);
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 36px;
 }
 
 .stat-item p {
-  font-size: var(--font-6);
-  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 24px;
   margin: 0;
 }
 
 .divider {
-  width: 1px;
-  height: 40px;
-  background: var(--color-stroke);
+  width: 72px;
+  height: 0;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  border-top: 1px solid #e4e4e4;
 }
 
-.header-right {
+.goal-card {
+  width: 336px;
+  padding: 16px;
+  background: var(--Colors-Basic-Card, white);
+  border-radius: 16px;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: var(--spacing-l);
-}
-
-.mascot {
-  width: 120px;
-  height: auto;
+  gap: 16px;
 }
 
 .goal-progress {
-  width: 100px;
-  text-align: center;
+  width: 130px;
+  height: 130px;
+  position: relative;
 }
 
 .goal-text {
-  margin-top: var(--spacing-xs);
-  color: var(--text-secondary);
-  font-size: var(--font-6);
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 20px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 500;
+  line-height: 30px;
 }

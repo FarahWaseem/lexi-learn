@@ -6,47 +6,50 @@ import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
 export default function HeaderStats() {
-  const data = dashboardMockData;
+  const { user, stats } = dashboardMockData;
 
   return (
     <div className="header-stats">
-      {/* القسم اليسار - الترحيب والإحصائيات */}
-      <div className="header-left">
-        <h2 className="welcome-title">Welcome Back, {data.name}</h2>
-
-        <div className="stats-row">
-          <div className="stat-item">
-            <strong>{data.newWords}</strong>
-            <p>New Words</p>
-          </div>
-          <div className="divider" />
-          <div className="stat-item">
-            <strong>{data.completedLessons}</strong>
-            <p>Completed Lessons</p>
-          </div>
-          <div className="divider" />
-          <div className="stat-item">
-            <strong>{data.totalTime}</strong>
-            <p>Total Practice Time</p>
+      <div className="header-card">
+        <div className="header-info">
+          <div className="welcome-title">Welcome Back, {user.name}</div>
+          <div className="stats-row">
+            <div className="stat-item">
+              <strong>{stats.newWords}</strong>
+              <p>New Words</p>
+            </div>
+            <div className="divider" />
+            <div className="stat-item">
+              <strong>{stats.completedLessons}</strong>
+              <p>Completed Lessons</p>
+            </div>
+            <div className="divider" />
+            <div className="stat-item">
+              <strong>{stats.totalTime} min</strong>
+              <p>Total Practice Time</p>
+            </div>
           </div>
         </div>
+        <img
+          src={zaytoonaWave}
+          alt="Zaytoona waving"
+          style={{ width: 158, height: 172 }}
+        />
       </div>
 
-      {/* القسم اليمين - الصورة و الهدف */}
-      <div className="header-right">
-        <img src={zaytoonaWave} alt="Zaytoona waving" className="mascot" />
+      <div className="goal-card">
         <div className="goal-progress">
           <CircularProgressbar
-            value={data.goalProgress}
-            text={`${data.goalProgress}%`}
+            value={stats.goalProgress}
+            text={`${stats.goalProgress}%`}
             styles={buildStyles({
-              pathColor: "var(--color-green)",
-              textColor: "var(--color-green)",
-              trailColor: "var(--color-green-shade)",
+              pathColor: "#007A3D",
+              textColor: "#007A3D",
+              trailColor: "rgba(0, 122, 61, 0.10)",
             })}
           />
-          <p className="goal-text">of your Goal</p>
         </div>
+        <div className="goal-text">of your Goal</div>
       </div>
     </div>
   );

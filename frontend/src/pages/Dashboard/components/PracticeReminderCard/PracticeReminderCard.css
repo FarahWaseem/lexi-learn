@@ -1,28 +1,52 @@
 .practice-reminder-card {
-  flex: 1;
+  width: 100%;
+  padding: 16px;
+  background: var(--Colors-Basic-Card, #ffffff);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+}
+
+.reminder-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.reminder-header {
   display: flex;
   align-items: center;
-  background: var(--color-card);
-  border-radius: var(--radius-l);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-l);
-  gap: var(--spacing-s);
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
 }
 
 .reminder-icon {
-  width: 60px;
-  height: auto;
+  width: 40px;
+  height: 40px;
+ object-fit: contain;
 }
 
 .reminder-text h4 {
-  font-size: var(--font-4);
-  color: var(--text-primary);
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  line-height: 36px;
   margin: 0;
 }
 
 .reminder-text p {
-  font-size: var(--font-6);
-  color: var(--text-secondary);
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  line-height: 24px;
   margin: 0;
-  line-height: 1.4;
 }

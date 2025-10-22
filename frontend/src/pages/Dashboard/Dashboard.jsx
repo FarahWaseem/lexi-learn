@@ -1,7 +1,5 @@
 import React from "react";
 import "./Dashboard.css";
-
-// 🧩 Components
 import HeaderStats from "./components/HeaderStats";
 import NextLessonCard from "./components/NextLessonCard";
 import PracticeReminderCard from "./components/PracticeReminderCard";
@@ -9,34 +7,44 @@ import StreakCard from "./components/StreakCard";
 import RecentLessons from "./components/RecentLessons";
 import LastVocabs from "./components/LastVocabs";
 import PracticeHistory from "./components/PracticeHistory";
+import { dashboardMockData } from "../../data/dashboardMockData";
 
 export default function Dashboard() {
-  const lessons = [
-    { id: 1, title: "Lesson 1", desc: "Basic greetings and phrases" },
-    { id: 2, title: "Lesson 2", desc: "Introducing yourself" },
-  ];
-
-  const vocabs = ["hello", "good morning", "how are you", "thank you"];
+  const { lessons, practiceHistory, user } = dashboardMockData;
 
   return (
     <div className="dashboard">
-      {/* 🟢 Top Section */}
       <div className="dashboard__top">
         <HeaderStats />
       </div>
-
-      {/* 🟡 Middle Section */}
-      <div className="dashboard__middle">
-        <NextLessonCard />
-        <PracticeReminderCard />
-        <StreakCard streakDays={3} />
-      </div>
-
-      {/* 🔵 Bottom Section */}
-      <div className="dashboard__bottom">
-        <RecentLessons lessons={lessons} />
-        <LastVocabs vocabs={vocabs} />
-        <PracticeHistory />
+      <div className="dashboard__grid-flex">
+                <div className="dashboard__col-left">
+          <div className="dashboard__item next-lesson">
+            <NextLessonCard />
+          </div>
+          <div className="dashboard__item recent-lessons">
+            <RecentLessons lessons={lessons} />
+          </div>
+        </div>
+        <div className="dashboard__col-right">
+          <div className="dashboard__row-top-right">
+            <div className="dashboard__item last-vocabs">
+              <LastVocabs />
+            </div>
+            <div className="dashboard__col-right-mini">
+              <div className="dashboard__item reminder">
+                <PracticeReminderCard />
+              </div>
+              <div className="dashboard__item streak">
+                <StreakCard streakDays={user.streakDays} />
+              </div>
+            </div>
+          </div>
+          
+          <div className="dashboard__item history">
+            <PracticeHistory data={practiceHistory} />
+          </div>
+        </div>
       </div>
     </div>
   );
