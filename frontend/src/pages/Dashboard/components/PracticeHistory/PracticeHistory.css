@@ -1,8 +1,9 @@
 .practice-history {
   background: var(--color-card);
-  border-radius: var(--radius-l);
+  border-radius: var(--radius-s);
   box-shadow: var(--shadow-card);
   padding: var(--spacing-l);
+  font-family: var(--font-family);
 }
 
 .section-header {
@@ -12,9 +13,30 @@
   margin-bottom: var(--spacing-m);
 }
 
+.section-header .heading {
+  color: var(--text-primary);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  line-height: 36px;
+}
+
 .week-label {
   color: var(--text-tertiary);
   font-size: var(--font-6);
+  font-weight: var(--font-regular);
+  line-height: 24px;
+}
+
+.recharts-cartesian-grid line {
+  stroke: rgba(0, 0, 0, 0.06);
+}
+
+.recharts-xaxis text,
+.recharts-yaxis text {
+  fill: var(--text-tertiary);
+  font-size: var(--font-7);
+  font-family: var(--font-family);
+  font-weight: var(--font-regular);
 }
 
 .recharts-tooltip-label {
