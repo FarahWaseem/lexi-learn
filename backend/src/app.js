@@ -11,7 +11,6 @@ const { connectDB } = require('./config/database');
 
 // Import routes
 const vocabRoutes = require('./routes/vocabRoutes');
-const userRoutes = require('./routes/userRoutes');
 const lessonRoutes = require('./routes/lessonRoutes');
 
 const app = express();
@@ -54,7 +53,6 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/v1/vocab', vocabRoutes);
-app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/lessons', lessonRoutes);
 
 // Error handling middleware

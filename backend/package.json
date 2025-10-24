@@ -10,6 +10,7 @@
     "test:watch": "jest --watch",
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seed.js",
+    "seed:lessons": "node src/database/seed.js",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
@@ -24,13 +25,10 @@
     "morgan": "^1.10.0",
     "dotenv": "^16.3.1",
     "pg": "^8.11.3",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
     "joi": "^17.11.0",
-    "multer": "^1.4.5-lts.1",
     "express-rate-limit": "^7.1.5",
     "compression": "^1.7.4",
-    "express-validator": "^7.0.1"
+    "@clerk/backend": "^1.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2",
