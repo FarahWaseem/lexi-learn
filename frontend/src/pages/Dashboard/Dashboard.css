@@ -1,100 +1,152 @@
 .dashboard {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-s);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  background-color: #f8f9fa;
+  background-color: var(--color-background);
+  padding-bottom: var(--spacing-l);
 }
 
 .dashboard__grid-flex {
-  display: flex; 
+  display: flex;
   justify-content: flex-start;
-  align-items: flex-start;
-  gap: 24px; 
+  align-items: stretch;
+  gap: var(--spacing-s);
   width: 100%;
+  padding-bottom: var(--spacing-s);
+  box-sizing: border-box;
 }
 
 .dashboard__col-left {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  flex-basis: 414px; 
-  flex-shrink: 0; 
+  gap: var(--spacing-s);
+  flex-basis: 414px;
+  flex-shrink: 0;
+}
+
+.dashboard__item.recent-lessons {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
 }
 
 .dashboard__col-right {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  flex-grow: 1; 
+  gap: var(--spacing-s);
+  flex-grow: 1;
 }
 
 .dashboard__row-top-right {
   display: flex;
-  align-items: stretch; 
-  gap: 24px;
+  align-items: stretch;
+  gap: var(--spacing-s);
   width: 100%;
 }
-
 
 .dashboard__col-right-mini {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: var(--spacing-s);
   flex: 1;
-  height: 100%;
+  max-width: 45%;
+  box-sizing: border-box;
+}
+
+.dashboard__item.last-vocabs {
+  flex: 1;
+  min-width: 55%;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+}
+
+.last-vocabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-s);
+}
+
+.last-vocabs__header,
+.last-vocabs__header .heading {
+  margin-bottom: 0 !important;
+}
+
+.dashboard__item.history {
+  flex: 1;
+  min-height: 280px;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  box-sizing: border-box;
 }
 
 
 .dashboard__item {
   width: 100%;
+  border-radius: var(--radius-s);
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  box-sizing: border-box;
 }
 
-.last-vocabs {
-  flex-basis: 389px; 
-  flex-shrink: 0; 
+.card {
+  width: 100%;
+  border-radius: var(--radius-s);
+  background-color: var(--color-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-xs);
+  box-sizing: border-box;
 }
 
-.next-lesson {}
-.recent-lessons {}
-.reminder {}
-.streak {}
-.history {}
+.dashboard__item.last-vocabs::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dashboard__item.last-vocabs::-webkit-scrollbar-thumb {
+  background-color: var(--color-black2);
+  border-radius: var(--radius-2xs);
+}
+
+.card__title {
+  font-family: var(--font-family);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin-bottom: 0;
+}
+
+.card__text {
+  font-family: var(--font-family);
+  font-size: var(--font-7);
+  color: var(--text-secondary);
+}
+
 .recent-lessons,
 .streak {
   margin-top: 0;
 }
 
-.card {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
-}
-
-.card__title {
-  font-family: "DM Sans", sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-.card__text {
-  font-family: "DM Sans", sans-serif;
-  font-size: 14px;
-  color: rgba(0, 0, 0, 0.6);
-}
-
 @media (max-width: 1024px) {
   .dashboard__grid-flex {
-    flex-direction: column; 
+    flex-direction: column;
   }
-}
 
-.dashboard__item.last-vocabs {
-  display: flex;
-  flex: 1; 
+  .dashboard__row-top-right {
+    flex-direction: column;
+  }
+
+  .dashboard__col-right-mini {
+    max-width: 100%;
+  }
+
+  .dashboard__item.history {
+    min-height: 200px;
+  }
 }

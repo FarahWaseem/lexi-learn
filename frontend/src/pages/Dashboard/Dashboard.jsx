@@ -17,20 +17,24 @@ export default function Dashboard() {
       <div className="dashboard__top">
         <HeaderStats />
       </div>
+
       <div className="dashboard__grid-flex">
-                <div className="dashboard__col-left">
+        <div className="dashboard__col-left">
           <div className="dashboard__item next-lesson">
             <NextLessonCard />
           </div>
+
           <div className="dashboard__item recent-lessons">
             <RecentLessons lessons={lessons} />
           </div>
         </div>
+
         <div className="dashboard__col-right">
           <div className="dashboard__row-top-right">
             <div className="dashboard__item last-vocabs">
               <LastVocabs />
             </div>
+
             <div className="dashboard__col-right-mini">
               <div className="dashboard__item reminder">
                 <PracticeReminderCard />
@@ -40,7 +44,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          
+
           <div className="dashboard__item history">
             <PracticeHistory data={practiceHistory} />
           </div>

@@ -23,6 +23,11 @@ function Header() {
       subtitle: "Your details",
       img: "/src/assets/images/lessonpage.png",
     },
+    "/lessonSammary": {
+      title: "LessonSammary",
+      subtitle: "Your details",
+      img: "/src/assets/images/lessonpage.png",
+    },
   };
 
   const current = pageInfo[location.pathname] || {

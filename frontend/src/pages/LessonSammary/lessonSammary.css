@@ -1,0 +1,6 @@
+.lessonSammary{
+    gap: 40px;
+    display: grid;
+    column-gap: 40px;
+
+}

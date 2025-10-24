@@ -1,0 +1,99 @@
+.header-stats {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.header-card {
+  flex: 1;
+  background: var(--Colors-Basic-Card, white);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.welcome-title {
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 24px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 700;
+  line-height: 36px;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-item {
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.stat-item strong {
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 36px;
+}
+
+.stat-item p {
+  font-size: 16px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 24px;
+  margin: 0;
+}
+
+.divider {
+  width: 72px;
+  height: 0;
+  transform: rotate(90deg);
+  transform-origin: top left;
+  border-top: 1px solid #e4e4e4;
+}
+
+.goal-card {
+  width: 336px;
+  padding: 16px;
+  background: var(--Colors-Basic-Card, white);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.goal-progress {
+  width: 130px;
+  height: 130px;
+  position: relative;
+}
+
+.goal-text {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 20px;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 500;
+  line-height: 30px;
+}
