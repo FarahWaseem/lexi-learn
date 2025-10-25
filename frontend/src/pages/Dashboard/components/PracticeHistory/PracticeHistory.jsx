@@ -33,7 +33,7 @@ export default function PracticeHistory() {
   <ResponsiveContainer width="100%" height={240}>
   <AreaChart
     data={data}
-    margin={{ top: 10, right: 0, left: 20, bottom: 0 }} // ✅ رجعنا margin يسار موجب بدل سالب
+    margin={{ top: 10, right: 0, left: 20, bottom: 0 }} 
   >
     <defs>
       <linearGradient id="colorTime" x1="0" y1="0" x2="0" y2="1">
@@ -57,7 +57,7 @@ export default function PracticeHistory() {
       domain={[0, 40]}
       width={60}           // ✅ مساحة كافية للنصوص
       tickMargin={8}       // ✅ مسافة خفيفة عن الخط
-      dx={-5}              // ✅ إزاحة بسيطة لتكون داخل التشارت مش خارجه
+      dx={-5}              
     />
     <Tooltip
       cursor={{ stroke: "rgba(0,0,0,0.1)", strokeWidth: 1 }}
