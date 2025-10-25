@@ -31,7 +31,7 @@
 }
 
 .lesson-title {
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   font-size: var(--font-4);
   font-weight: var(--font-bold);
   margin: 0;

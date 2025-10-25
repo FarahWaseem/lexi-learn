@@ -12,7 +12,6 @@ export default function HeaderStats() {
     <div className="header-stats">
       <div className="header-card">
         <div className="header-info">
-          <div className="welcome-title">Welcome Back, {user.name}</div>
           <div className="stats-row">
              <img
           src={zaytoonaWave}
@@ -20,18 +19,8 @@ export default function HeaderStats() {
           style={{ width: 158, height: 172 }}
         />
             <div className="stat-item">
-              <strong>{stats.newWords}</strong>
-              <p>New Words</p>
-            </div>
-            <div className="divider" />
-            <div className="stat-item">
-              <strong>{stats.completedLessons}</strong>
-              <p>Completed Lessons</p>
-            </div>
-            <div className="divider" />
-            <div className="stat-item">
-              <strong>{stats.totalTime} min</strong>
-              <p>Total Practice Time</p>
+              <strong className="welcome-title">Congratulations keep it up</strong>
+              <p>You have sucssefully completed Lesson 6  </p>
             </div>
           </div>
         </div>
@@ -49,7 +38,7 @@ export default function HeaderStats() {
             })}
           />
         </div>
-        <div className="goal-text">of your Goal</div>
+        <div className="goal-text">Performance in this Lesson</div>
       </div>
     </div>
   );

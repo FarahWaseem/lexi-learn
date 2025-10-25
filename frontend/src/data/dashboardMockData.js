@@ -46,8 +46,8 @@ export const dashboardMockData = {
     { day: "Sun", minutes: 20 },
     { day: "Mon", minutes: 15 },
     { day: "Tue", minutes: 25 },
-    { day: "Wed", minutes: 5 },
-    { day: "Thu", minutes: 30 },
-    { day: "Fri", minutes: 0 },
+    { day: "Wed", minutes: 60 },
+    { day: "Thu", minutes: 0 },
+
   ],
 };

@@ -11,12 +11,11 @@ export default function Sidebar() {
 
   const toggleMode = () => {
     setDarkMode(!darkMode);
-    document.body.classList.toggle("dark-mode"); // تغيير المود على مستوى الصفحة
+    document.body.classList.toggle("dark-mode"); 
   };
 
   return (
     <div className={`sidebar ${darkMode ? "dark" : "light"}`}>
-      {/* الجزء العلوي: الشعار + النصوص */}
       <div className="sidebar-header">
         <img src="/src/assets/icons/Logo.svg" alt="Logo" className="logo" />
         <div className="header-text">
@@ -27,7 +26,6 @@ export default function Sidebar() {
 
       <hr />
 
-      {/* الجزء الأوسط: روابط التنقل */}
       <div className="sidebar-links">
         <NavLink
           to="/dashboard"
@@ -37,7 +35,7 @@ export default function Sidebar() {
         </NavLink>
 
         <NavLink
-          to="/lesson"
+          to="/lessons"
           className={({ isActive }) => (isActive ? "active-link" : "")}
         >
           <img src={LessonIcon} className="icon" /> Lesson
@@ -51,7 +49,6 @@ export default function Sidebar() {
         </NavLink>
       </div>
 
-      {/* الجزء السفلي: زر تغيير المود */}
       <div className="sidebar-footer">
         <label className="switch">
           <input type="checkbox" checked={darkMode} onChange={toggleMode} />

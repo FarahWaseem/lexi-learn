@@ -80,7 +80,6 @@
   gap: var(--spacing-2xs);
 }
 
-/* ✅ التشيبز */
 .filter-chip {
   display: flex;
   align-items: center;
