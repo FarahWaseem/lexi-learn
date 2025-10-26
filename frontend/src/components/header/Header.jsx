@@ -2,11 +2,12 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { useUser } from "../../context/UserContext"; 
 import Settings from "./settings/Settings";
+import ProfileDropdown from "./ProfileDropdown/ProfileDropdown";
 import "./Header.css";
 
 function Header() {
   const location = useLocation();
-  const { userData } = useUser(); 
+  const { user } = useUser();
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -80,15 +81,14 @@ function Header() {
               className="profile-btn"
             >
               <img
-                src={
-                  userData.avatar || "/src/assets/icons/User Circle.svg"
-                }
+              src={user.avatar || "/src/assets/icons/User Circle.svg"}
                 alt="profile"
                 className="profile-img"
-              />
+                />
               <span className="profile-name">
-                {userData.firstName} {userData.lastName}
+              {user.firstName} {user.lastName}
               </span>
+
               <img
                 src="/src/assets/icons/arrow-down.svg"
                 alt="arrow"
@@ -97,29 +97,12 @@ function Header() {
             </button>
 
             {isProfileOpen && (
-              <div className="profile-dropdown">
-                <button
-                  onClick={handleOpenSettings}
-                  className="profile-setting"
-                >
-                  <img
-                    src="/src/assets/icons/setting-2.svg"
-                    alt="Setting"
-                    className="setting-img"
-                  />
-                  <h5>Setting</h5>
-                </button>
-
-                <div className="profile-logout">
-                  <img
-                    src="/src/assets/icons/Logout icon.svg"
-                    alt="Logout"
-                    className="setting-img"
-                  />
-                  <h5>Logout</h5>
-                </div>
-              </div>
+              <ProfileDropdown
+              onSettingsClick={handleOpenSettings}
+              onLogoutClick={() => console.log("Logout clicked")}
+              />
             )}
+
           </div>
         </div>
       </header>

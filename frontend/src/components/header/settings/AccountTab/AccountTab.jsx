@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { useUser } from "../../../../context/UserContext"; 
+import React from "react";
+import { useUser } from "../../../../context/UserContext";
 import "./AccountTab.css";
 
 function AccountTab({ onClose }) {
-  const { userData, setUserData } = useUser();
+  const { user, setUser } = useUser();
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setUserData({ ...userData, avatar: reader.result });
+        setUser({ ...user, avatar: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -22,14 +22,14 @@ function AccountTab({ onClose }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUserData({ ...userData, [name]: value });
+    setUser({ ...user, [name]: value });
   };
 
   return (
     <div className="account-tab">
       <div className="profile-img-wrapper">
         <img
-          src={userData.avatar || "/src/assets/icons/User Circle.svg"}
+          src={user.avatar || "/src/assets/icons/User Circle.svg"}
           alt="User Avatar"
           className="profile-img"
         />
@@ -59,17 +59,18 @@ function AccountTab({ onClose }) {
             <input
               type="text"
               name="firstName"
-              value={userData.firstName}
+              value={user.firstName}
               onChange={handleChange}
               placeholder="First name"
             />
           </div>
+
           <div className="input-container">
             <img src="/src/assets/icons/user.svg" alt="user" className="icon" />
             <input
               type="text"
               name="lastName"
-              value={userData.lastName}
+              value={user.lastName}
               onChange={handleChange}
               placeholder="Last name"
             />
@@ -84,7 +85,7 @@ function AccountTab({ onClose }) {
           <input
             type="email"
             name="email"
-            value={userData.email}
+            value={user.email}
             onChange={handleChange}
             placeholder="example@email.com"
           />

@@ -1,0 +1,113 @@
+.preferences-tab {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.pref-item {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-stroke, #e4e4e4);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.pref-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pref-icon-wrapper {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(179, 179, 179, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pref-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.85;
+}
+
+.pref-texts {
+  display: flex;
+  flex-direction: column;
+}
+
+.pref-title {
+  font-family: var(--font-family, "DM Sans");
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--text-primary, rgba(0, 0, 0, 0.87));
+  line-height: 30px;
+}
+
+.pref-description {
+  font-family: var(--font-family, "DM Sans");
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  line-height: 21px;
+}
+
+.switch {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  display: inline-block;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 100px;
+  transition: 0.3s;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 27px;
+  width: 27px;
+  left: 2px;
+  top: 2px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0px 3px 1px rgba(0, 0, 0, 0.06);
+  transition: 0.3s;
+}
+
+.switch input:checked + .slider {
+  background-color: var(--color-green, #007a3d);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+.preferences-tab .pref-icon.filled {
+  filter: brightness(0) saturate(100%) invert(26%) sepia(96%) 
+          saturate(1272%) hue-rotate(100deg) brightness(96%) contrast(104%);
+}
+

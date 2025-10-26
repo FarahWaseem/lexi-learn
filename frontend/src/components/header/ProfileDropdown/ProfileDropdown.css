@@ -1,0 +1,57 @@
+.profile-dropdown {
+  width: 200px;
+  background: white;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(0, 122, 61, 0.1);
+}
+
+.dropdown-item.active {
+  background: rgba(0, 122, 61, 0.1);
+}
+
+.icon-wrapper {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.icon-wrapper.green {
+  background: rgba(179, 179, 179, 0.1);
+}
+
+.icon-wrapper.red-bg {
+  background: rgba(206, 17, 38, 0.1);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+}
+
+.label {
+  font-family: "DM Sans", sans-serif;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 24px;
+}

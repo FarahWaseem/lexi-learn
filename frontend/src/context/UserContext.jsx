@@ -1,20 +1,36 @@
-import { createContext, useState, useContext } from "react";
-import { dashboardMockData } from "../data/dashboardMockData";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const UserContext = createContext();
 
 export function UserProvider({ children }) {
-  const initialUser = {
-    firstName: dashboardMockData.user.firstName || "Ahmed",
-    lastName: dashboardMockData.user.lastName || "Ali",
-    email: dashboardMockData.user.email || "test@example.com",
-    avatar: dashboardMockData.user.avatar || "/src/assets/icons/User Circle.svg",
-  };
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("userData");
+    return storedUser ? JSON.parse(storedUser) : {
+      firstName: "Ahmed",
+      lastName: "Ali",
+      email: "test@example.com",
+      avatar: "/src/assets/icons/User Circle.svg"
+    };
+  });
 
-  const [userData, setUserData] = useState(initialUser);
+  const [preferences, setPreferences] = useState(() => {
+    const storedPrefs = localStorage.getItem("userPrefs");
+    return storedPrefs ? JSON.parse(storedPrefs) : {
+      notifications: true,
+      darkMode: false,
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem("userData", JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("userPrefs", JSON.stringify(preferences));
+  }, [preferences]);
 
   return (
-    <UserContext.Provider value={{ userData, setUserData }}>
+    <UserContext.Provider value={{ user, setUser, preferences, setPreferences }}>
       {children}
     </UserContext.Provider>
   );
