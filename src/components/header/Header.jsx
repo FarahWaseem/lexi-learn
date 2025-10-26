@@ -1,16 +1,53 @@
-// Header.jsx
+// Header.jsx — يعرض الاسم الأول فقط من قاعدة البيانات
 import { NavLink, useLocation } from "react-router-dom";
-import { useState } from "react";
-import { useClerk } from "@clerk/clerk-react"; // ⬅️ لإجراء تسجيل الخروج
+import { useState, useEffect } from "react";
+import { useClerk, useAuth, useUser } from "@clerk/clerk-react";
 import "./Header.css";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
 function Header() {
   const location = useLocation();
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const { signOut } = useClerk(); // ⬅️ دالة الخروج من Clerk
+  const { signOut } = useClerk();
+  const { getToken } = useAuth();
+  const { user: clerkUser } = useUser();
 
-  // النصوص والصور حسب الصفحة
+  const [firstName, setFirstName] = useState(
+    clerkUser?.firstName || "User"
+  );
+
+  // 🔹 جلب الاسم من قاعدة البيانات (العمود first_name فقط)
+  useEffect(() => {
+    let abort = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error("Missing Clerk token");
+
+        const res = await fetch(`${API_BASE}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!abort && data?.ok && data?.user?.first_name) {
+          setFirstName(data.user.first_name);
+        }
+      } catch {
+        if (!abort && clerkUser?.firstName) {
+          setFirstName(clerkUser.firstName);
+        }
+      }
+    })();
+
+    return () => {
+      abort = true;
+    };
+  }, [getToken, clerkUser?.firstName]);
+
+  // تعريف معلومات الصفحة
   const pageInfo = {
     "/dashboard": {
       title: "Dashboard",
@@ -29,14 +66,12 @@ function Header() {
     },
   };
 
-  // الصفحة الحالية
   const current = pageInfo[location.pathname] || {
     title: "Welcome",
     subtitle: "Choose a page",
     img: "/src/assets/images/zaytoonaReadingBook.png",
   };
 
-  // ⬅️ تسجيل الخروج + إعادة التوجيه لصفحة /login
   const handleLogout = async () => {
     try {
       setIsProfileOpen(false);
@@ -88,7 +123,8 @@ function Header() {
               alt="profile"
               className="profile-img"
             />
-            <span className="profile-name">Asma</span>
+            {/* ✅ الاسم الأول فقط من قاعدة البيانات */}
+            <span className="profile-name">{firstName}</span>
             <img
               src="/src/assets/icons/arrow-down.svg"
               alt="arrow"
@@ -98,7 +134,6 @@ function Header() {
 
           {isProfileOpen && (
             <div className="profile-dropdown">
-              {/* إعدادات (اختياري: غيري المسار لاحقًا لصفحة إعدادات حقيقية) */}
               <NavLink
                 to="/dashboard"
                 className={({ isActive }) => (isActive ? "ho" : "")}
@@ -114,7 +149,6 @@ function Header() {
                 </div>
               </NavLink>
 
-              {/* زر الخروج الحقيقي */}
               <button
                 type="button"
                 className="profile-logout"

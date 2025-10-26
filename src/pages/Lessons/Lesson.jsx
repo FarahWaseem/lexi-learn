@@ -1,52 +1,62 @@
-// Lesson.jsx — unified version (fetches from DB)
+// Lesson.jsx — يستخدم /api/my/topics ويدعم fallback محلي + خادم لفتح السمري بالـ sessionId
 import React, { useEffect, useMemo, useState } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Pagination from "../../components/reusable/pagination/pagination";
-import { isUnlocked, isCompleted } from "../../utils/progress";
+import {
+  isUnlocked,
+  isCompleted as isCompletedLocal,
+  getSummarySessionId,
+} from "../../utils/progress";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@clerk/clerk-react";
 import "./Lesson.css";
 
-// ✅ استخدمي نفس المفتاح الموجود في .env
 const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:4000";
 
 function Lessons() {
   const navigate = useNavigate();
+  const { getToken } = useAuth();
+
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [items, setItems] = useState([]);   // بيانات الدروس من الـ API
+  const [items, setItems] = useState([]); // {id,title,description,unlocked,completed,summarySessionId}
   const [total, setTotal] = useState(0);
 
   const pageSize = 6;
 
-  // 🔹 تحميل الدروس من قاعدة البيانات
   useEffect(() => {
     let abort = false;
-
     (async () => {
       try {
         setLoading(true);
         setErr("");
 
-        const url = new URL(`${API_BASE}/api/topics`);
-        url.searchParams.set("q", search);
-        url.searchParams.set("page", String(currentPage));
-        url.searchParams.set("pageSize", String(pageSize));
-
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        const token = await getToken();
+        // بإمكانك إضافة q/page/pageSize إذا كان الراوت يدعمهم
+        const res = await fetch(`${API_BASE}/api/my/topics`, {
+          headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (abort) return;
 
-        const lessons = (data.items || []).map((d) => ({
-          id: d.day,
-          title: d.topic,
-          description: `Level ${d.cefr} • 6 questions`,
-          unlocked: isUnlocked(d.day),
-          completed: isCompleted(d.day),
-        }));
+        const lessons = (data.items || []).map((d) => {
+          const day = Number(d.day);
+          // ✅ اعتبره مكتمل إذا السيرفر قال أو التخزين المحلي قال
+          const completed = Boolean(d.is_completed) || isCompletedLocal(day);
+
+          return {
+            id: day,
+            title: d.topic,
+            description: `Level ${d.cefr} • 6 questions`,
+            unlocked: isUnlocked(day),
+            completed,
+            // ✅ sessionId من السيرفر أولاً، وإلا من التخزين المحلي
+            summarySessionId: d.session_id || getSummarySessionId(day) || null,
+          };
+        });
 
         setItems(lessons);
         setTotal(data.total || lessons.length);
@@ -56,13 +66,12 @@ function Lessons() {
         if (!abort) setLoading(false);
       }
     })();
-
     return () => {
       abort = true;
     };
-  }, [search, currentPage]);
+  }, [getToken]);
 
-  // فلترة إضافية في الكلاينت (اختياري)
+  // فلترة + تقطيع للصفحة الحالية
   const filtered = useMemo(() => {
     return items.filter((l) =>
       l.title.toLowerCase().includes(search.toLowerCase())
@@ -70,12 +79,37 @@ function Lessons() {
   }, [items, search]);
 
   const totalPages = Math.max(1, Math.ceil((total || filtered.length) / pageSize));
-  const pageItems = filtered;
+  const pageItems = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
-  // التنقل عند الضغط على الكارت
-  function onClickCard(lesson) {
+  // ⬇️ فتح السمري بنفس منطق SimpleLesson (sessionId حقيقي) مع فولباك إضافي
+  async function onClickCard(lesson) {
     if (lesson.completed) {
-      navigate(`/summary/${lesson.id}`);
+      if (lesson.summarySessionId) {
+        navigate(`/summary/${lesson.summarySessionId}`);
+        return;
+      }
+
+      // 🔁 فولباك أخير من السيرفر لليوم الحالي (لدروس قديمة قبل التخزين المحلي)
+      try {
+        const token = await getToken();
+        const res = await fetch(`${API_BASE}/api/sessions/last?day=${lesson.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (json?.sessionId) {
+            navigate(`/summary/${json.sessionId}`);
+            return;
+          }
+        } else if (res.status !== 404) {
+          alert(`HTTP ${res.status} أثناء جلب الجلسة.`);
+          return;
+        }
+      } catch {
+        // ignore
+      }
+
+      alert("لا توجد جلسة محفوظة لهذا اليوم. افتحي الدرس للحظات ثم اغلقيه لإنشاء ملخص.");
     } else if (lesson.unlocked) {
       navigate(`/lesson1?day=${lesson.id}`);
     }
@@ -84,7 +118,6 @@ function Lessons() {
   return (
     <div className="lessons-page">
       <Sidebar />
-
       <div className="lessons-content">
         <div className="toolbar">
           <div className="search-container">
@@ -92,11 +125,13 @@ function Lessons() {
             <input
               type="text"
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search about your Lesson..."
             />
           </div>
-
           <button className="filter-btn">
             <img src="/src/assets/icons/Sort.svg" alt="filter" className="icon" />
             Filter

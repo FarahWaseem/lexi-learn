@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { connectRealtime } from "../../lib/realtime";
 import { startSTT } from "../../utils/voice";
 import "./SimpleLesson.css";
+// أعلى الملف مع باقي الاستيرادات
+import { markCompleted } from "../../utils/progress";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
@@ -318,14 +320,22 @@ export default function SimpleLesson() {
 
             s.on("lesson_finished", () => {
                 setFinished(true);
+
+                // ✅ علّم هذا اليوم كمكتمل وافتح الدرس التالي
                 try {
-                    sttRef.current.stop?.();
+                    markCompleted(dayNumber, sessionId);
                 } catch { }
+
+                try { sttRef.current.stop?.(); } catch { }
                 if (tickerRef.current) cancelAnimationFrame(tickerRef.current);
                 stopSpeaking();
                 setTimerLeft(0);
-                setMessages((m) => [...m, { role: "ai", text: "Great job! Lesson finished 🎉" }]);
+                setMessages((m) => [
+                    ...m,
+                    { role: "ai", text: "Great job! Lesson finished 🎉 The next lesson is now unlocked." },
+                ]);
             });
+
 
             s.on("error", ({ message }) => setErr(message || "Realtime error"));
 

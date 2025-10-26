@@ -427,7 +427,8 @@ const startHandler = async (req, res) => {
   }
 };
 app.post("/api/sessions/start", requireAuth, startHandler);
-app.post("/api/sessions", requireAuth, startHandler); // alias
+app.post("/api/sessions", requireAuth(), startHandler);
+
 
 // ---------- Utterances: audio upload (optional) ----------
 const audioStorage = multer.diskStorage({
@@ -527,7 +528,7 @@ app.post("/api/sessions/:id/finish", requireAuth, async (req, res) => {
 });
 
 // ---------- Summary ----------
-app.get("/api/sessions/:id/summary", requireAuth, async (req, res) => {
+app.get("/api/sessions/:id/summary", requireAuth(), async (req, res) =>{
   try {
     const uuidUserId = await requireUser(req);
     const { id } = req.params;
@@ -539,16 +540,71 @@ app.get("/api/sessions/:id/summary", requireAuth, async (req, res) => {
     res.status(500).json({ error: e.message || "summary failed" });
   }
 });
-
-// ---------- Export PDF ----------
-app.get("/api/sessions/:id/export.pdf", requireAuth, async (req, res) => {
+app.get("/api/my/topics", requireAuth(), async (req, res) => {
   try {
+    const uuidUserId = await requireUser(req); // ← هذا نص UUID
+    const { rows } = await pool.query(`
+      SELECT
+        dt.day_number            AS day,
+        dt.title_en              AS topic,
+        dt.level                 AS cefr,
+        (
+          SELECT s.id
+          FROM sessions s
+          WHERE s.user_id = $1 AND s.topic_id = dt.id
+          ORDER BY s.completed_at DESC NULLS LAST, s.started_at DESC
+          LIMIT 1
+        )                        AS session_id,
+        EXISTS (
+          SELECT 1 FROM sessions s
+          WHERE s.user_id = $1 AND s.topic_id = dt.id AND s.status = 'completed'
+        )                        AS is_completed
+      FROM daily_topics dt
+      ORDER BY dt.day_number ASC
+    `, [uuidUserId]); //  ← استخدمي uuidUserId
+    res.json({ ok: true, items: rows, total: rows.length });
+  } catch (e) {
+    console.error("GET /api/my/topics failed:", e);
+    res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
+
+
+app.get("/api/sessions/last", requireAuth(), async (req, res) => {
+  try {
+    const uuidUserId = await requireUser(req);
+    const day = Number(req.query.day || 0);
+    if (!day) return res.status(400).json({ ok: false, error: "Missing day" });
+
+    const q = `
+      SELECT s.id AS session_id
+      FROM sessions s
+      JOIN daily_topics dt ON dt.id = s.topic_id
+      WHERE s.user_id = $1 AND dt.day_number = $2
+      ORDER BY s.completed_at DESC NULLS LAST, s.started_at DESC
+      LIMIT 1
+    `;
+    const { rows } = await pool.query(q, [uuidUserId, day]);
+    if (!rows.length) return res.status(404).json({ ok: false, error: "No session for this day" });
+    res.json({ ok: true, sessionId: rows[0].session_id });
+  } catch (e) {
+    console.error("GET /api/sessions/last failed:", e);
+    res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
+
+// ---------- Export PDF (Pretty) ----------
+app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
+  try {
+    const auth = getAuth(req);
+    const uname = await resolveUsername(auth.userId); // اسم المستخدم من Clerk ليوضع في الـPDF
     const uuidUserId = await requireUser(req);
     const { id } = req.params;
 
+    // نقرأ الميتا + محاولات + التصحيحات (كما كنتِ تعملي)
     const s = await pool.query(
       `SELECT s.id, s.started_at, s.completed_at, s.status,
-              t.title_en, t.day_number
+              t.title_en, t.day_number, t.level
        FROM sessions s
        JOIN daily_topics t ON t.id = s.topic_id
        WHERE s.id=$1 AND s.user_id=$2`,
@@ -574,27 +630,251 @@ app.get("/api/sessions/:id/export.pdf", requireAuth, async (req, res) => {
       [id]
     );
 
+    // أجزاء إضافية من ملخص الدرس الجاهز
+    const extra = await pool.query(
+      `SELECT tw.term AS word, COALESCE(tw.meaning, '') AS meaning
+       FROM sessions s
+       JOIN topic_words tw ON tw.topic_id = s.topic_id
+       WHERE s.id = $1
+       ORDER BY tw.id ASC
+       LIMIT 8`,
+      [id]
+    );
+    const vocab = extra.rows;
+
+    // احسب أداء إجمالي مبسّط
+    const scoreAgg = await pool.query(
+      `SELECT ROUND(AVG((COALESCE(c.fluency_score,0)+COALESCE(c.grammar_score,0)+COALESCE(c.vocab_score,0))/3.0))::int AS overall
+       FROM attempts a LEFT JOIN corrections c ON c.attempt_id=a.id
+       WHERE a.session_id=$1`,
+      [id]
+    );
+    const performance = Number(scoreAgg.rows[0]?.overall || 0);
+
+    // ======  PDFKit  ======
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="lesson-${session.day_number}.pdf"`);
 
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    doc.info = {
+      Title: `Lesson Day ${session.day_number}`,
+      Author: "LexiLearn",
+      Subject: "Lesson Summary",
+    };
     doc.pipe(res);
 
-    doc.fontSize(18).text(`Lesson Day ${session.day_number} — ${session.title_en || ""}`);
-    doc.moveDown().fontSize(12).text(`Started: ${session.started_at}   Completed: ${session.completed_at || "-"}`);
-    doc.moveDown();
+    // ---- (اختياري) خطوط عربية:
+    // const arabicFont = path.join(PUBLIC, "fonts", "NotoNaskhArabic-Regular.ttf");
+    // if (fs.existsSync(arabicFont)) doc.font(arabicFont); else doc.font("Helvetica");
+    doc.font("Helvetica");
 
-    rows.rows.forEach((r) => {
-      doc.fontSize(14).text(`Q${r.question_idx}: ${r.prompt_en}`, { underline: true });
-      doc.moveDown(0.2).fontSize(12).text(`User: ${r.user_text || "-"}`);
-      if (r.feedback) doc.moveDown(0.2).text(`Feedback: ${r.feedback}`);
+    // ألوان وهوية خفيفة
+    const ACCENT = "#2F855A";  // أخضر
+    const MUTED  = "#6B7280";  // رمادي
+    const LINE   = "#E5E7EB";  // حدود فاتحة
+
+    // Helpers
+    const drawHeader = () => {
+      // بانر علوي
+      doc.save();
+      doc.rect(40, 40, doc.page.width - 80, 70).fill(ACCENT);
+      doc.fill("#fff").fontSize(16).text(`LexiLearn — Lesson Summary`, 52, 52, { width: doc.page.width - 104, align: "left" });
+      doc.fontSize(12).text(`Student: ${uname}`, 52, 78, { width: doc.page.width - 104, align: "left" });
+      doc.restore();
+
+      // عنوان رئيسي تحت البانر
+      doc.moveDown(2);
+      doc.fontSize(18).fillColor("#111827")
+        .text(`Day ${session.day_number}: ${session.title_en || ""}  •  Level ${session.level}`, { continued: false });
+      doc.moveDown(0.3);
+      doc.fontSize(10).fillColor(MUTED)
+        .text(`Started: ${session.started_at}     Completed: ${session.completed_at || "-"}`);
+      drawLine();
+    };
+
+    const drawLine = () => {
+      doc.moveDown(0.5);
+      doc.strokeColor(LINE).lineWidth(1).moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke();
+      doc.moveDown(0.8);
+    };
+
+    const sectionTitle = (title) => {
+      doc.moveDown(0.3);
+      doc.fontSize(12).fillColor(ACCENT).text(title.toUpperCase(), { underline: false });
+      doc.moveDown(0.4);
+    };
+
+    const kv = (label, value) => {
+      doc.fontSize(9).fillColor(MUTED).text(label);
+      doc.fontSize(11).fillColor("#111827").text(value);
+      doc.moveDown(0.2);
+    };
+
+    const scoreBar = (label, val) => {
+      const maxW = doc.page.width - 160;
+      const x = 52, y = doc.y + 2;
+      const w = Math.max(0, Math.min(maxW, Math.round((val / 100) * maxW)));
+      doc.fontSize(11).fillColor("#111827").text(`${label}: ${val}%`, 52, doc.y);
+      // شريط خلفي
+      doc.roundedRect(x, y + 16, maxW, 10, 5).fillAndStroke(LINE, LINE);
+      // شريط أمامي
+      doc.roundedRect(x, y + 16, w, 10, 5).fill(ACCENT);
+      doc.moveDown(1.2);
+    };
+
+    const pill = (txt) => {
+      // شارة صغيرة (chip)
+      const px = doc.x, py = doc.y;
+      const padX = 8, padY = 3;
+      const w = doc.widthOfString(txt) + padX * 2;
+      const h = doc.currentLineHeight() + padY * 2;
+      doc.save()
+        .roundedRect(px, py, w, h, 8)
+        .fillColor("#DCFCE7")
+        .strokeColor("#BBF7D0")
+        .lineWidth(1)
+        .fillAndStroke()
+        .fillColor("#166534")
+        .text(txt, px + padX, py + padY)
+        .restore();
+      doc.moveDown(1.1);
+    };
+
+    const boxed = (title, body) => {
+      const x = 52, y = doc.y, w = doc.page.width - 104;
+      const hStart = y + 10;
+      doc.save()
+        .roundedRect(x, y, w, 0, 12) // height 0 الآن؛ سنغلق لاحقاً بعد الكتابة
+        .clip();
+
+      doc.fillColor("#111827").fontSize(12).text(title, x + 12, y + 10, { width: w - 24 });
+      doc.moveDown(0.4);
+      doc.fontSize(11).fillColor("#374151").text(body, x + 12, doc.y, { width: w - 24 });
+
+      const hEnd = doc.y + 10;
+      doc.restore();
+      // حدود الصندوق
+      doc.roundedRect(x, y, w, hEnd - y, 12)
+        .lineWidth(1).strokeColor(LINE).stroke();
+      doc.moveDown(0.6);
+    };
+
+    const vocabGrid = (items) => {
+      if (!items?.length) return;
+
+      sectionTitle("New Vocabulary");
+      const cols = 2;
+      const gutter = 16;
+      const usableW = doc.page.width - 104;
+      const colW = (usableW - gutter) / cols;
+      let cx = 52, cy = doc.y;
+
+      items.forEach((it, i) => {
+        if (i % cols === 0 && i > 0) { // سطر جديد
+          cx = 52;
+          cy = doc.y + 6;
+        }
+        // صندوق
+        doc.save()
+          .roundedRect(cx, cy, colW, 60, 10)
+          .fillColor("#F9FAFB").strokeColor(LINE).lineWidth(1).fillAndStroke()
+          .fillColor("#111827").fontSize(12).text(it.word || "-", cx + 10, cy + 8, { width: colW - 20 })
+          .fontSize(10).fillColor(MUTED).text((it.meaning || "").trim(), cx + 10, doc.y + 2, { width: colW - 20 })
+          .restore();
+
+        // انتقل للعمود التالي
+        cx += colW + gutter;
+        // لو وصلنا العمود الأخير، حدّث y
+        if ((i % cols) === cols - 1) {
+          doc.y = cy + 60;
+        }
+      });
+      doc.moveDown(0.6);
+      drawLine();
+    };
+
+    const questionBlock = (q) => {
+      // عنوان السؤال
+      doc.fontSize(13).fillColor("#111827").text(`Q${q.question_idx}: ${q.prompt_en}`, { underline: true });
+      doc.moveDown(0.2);
+      // إجابة المستخدم
+      doc.fontSize(11).fillColor("#374151").text(`Your answer: ${q.user_text || "-"}`);
+      // فيدباك
+      if (q.feedback) {
+        doc.moveDown(0.2);
+        doc.fontSize(11).fillColor("#111827").text("Feedback:");
+        doc.fontSize(11).fillColor("#374151").text(q.feedback);
+      }
+      // شرائط السكور المصغّرة (إن وجدت)
       const parts = [];
-      if (r.fluency_score != null) parts.push(`Fluency ${r.fluency_score}`);
-      if (r.grammar_score != null) parts.push(`Grammar ${r.grammar_score}`);
-      if (r.vocab_score != null) parts.push(`Vocab ${r.vocab_score}`);
-      if (parts.length) doc.moveDown(0.2).text(parts.join(" • "));
-      doc.moveDown();
-    });
+      if (q.fluency_score != null) parts.push(`Fluency ${q.fluency_score}`);
+      if (q.grammar_score != null) parts.push(`Grammar ${q.grammar_score}`);
+      if (q.vocab_score != null) parts.push(`Vocab ${q.vocab_score}`);
+      if (parts.length) {
+        doc.moveDown(0.2);
+        parts.forEach((p) => pill(p));
+      }
+
+      // فاصل
+      drawLine();
+
+      // تجنّب نزول عناصر على حافة الصفحة
+      if (doc.y > doc.page.height - 120) doc.addPage();
+    };
+
+    // ====== بناء المستند ======
+    drawHeader();
+
+    // Overview
+    sectionTitle("Overview");
+    kv("Student", uname);
+    kv("Lesson Title", session.title_en || "-");
+    kv("Day / Level", `Day ${session.day_number} • Level ${session.level}`);
+    kv("Status", String(session.status || "-"));
+    kv("Started", String(session.started_at || "-"));
+    kv("Completed", String(session.completed_at || "-"));
+    doc.moveDown(0.4);
+    scoreBar("Overall Performance", performance);
+    drawLine();
+
+    // نقاط إيجابية بسيطة حسب الأداء
+    const positive = [];
+    if (performance >= 40) positive.push("Clear pronunciation");
+    if (performance >= 50) positive.push("Quick response time");
+    if (performance >= 60) positive.push("Built correct sentences");
+    if (!positive.length) positive.push("You showed persistence — keep going!");
+
+    sectionTitle("Highlights");
+    positive.forEach((p) => pill(p));
+    drawLine();
+
+    // Vocabulary Grid
+    vocabGrid(vocab);
+
+    // Recap / Grammar note بصناديق
+    const recapText = rows.rows.length
+      ? `Today, you practiced: ${rows.rows.slice(0, 2).map(r => r.prompt_en).join("; ")}.`
+      : "Good practice today.";
+    boxed("Lesson Recap", recapText);
+
+    const firstFb = rows.rows.find((r) => r.feedback);
+    if (firstFb?.feedback) {
+      boxed("Grammar Feedback", firstFb.feedback);
+    }
+    drawLine();
+
+    // الأسئلة
+    sectionTitle("Per-Question Details");
+    rows.rows.forEach(questionBlock);
+
+    // Footer (أرقام الصفحات)
+    const range = doc.bufferedPageRange(); // { start, count }
+    for (let i = range.start; i < range.start + range.count; i++) {
+      doc.switchToPage(i);
+      const label = `Page ${i + 1} of ${range.count}`;
+      doc.fontSize(9).fillColor(MUTED)
+        .text(label, 40, doc.page.height - 30, { width: doc.page.width - 80, align: "center" });
+    }
 
     doc.end();
   } catch (e) {
@@ -602,6 +882,7 @@ app.get("/api/sessions/:id/export.pdf", requireAuth, async (req, res) => {
     res.status(500).end();
   }
 });
+
 
 io.use(async (socket, next) => {
   if (process.env.SKIP_WS_AUTH === "1") {
