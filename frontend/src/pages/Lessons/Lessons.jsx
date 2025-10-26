@@ -42,7 +42,6 @@ export default function Lessons() {
     return result;
   }, [lessons, search, tempSelectedLesson, tempOrder]);
 
-  // فتح الفلتر
   const openFilter = () => {
     console.log("🟦 [Lessons] openFilter()");
     setTempSelectedLesson([...selectedLesson]);

@@ -1,6 +1,9 @@
 export const dashboardMockData = {
   user: {
-    name: "Ali",
+    firstName: "Ahmed",
+    lastName: "Ali",
+    email: "test@example.com",
+    avatar: "/src/assets/icons/User Circle.svg",
     streakDays: 3,
   },
   stats: {
@@ -51,3 +54,6 @@ export const dashboardMockData = {
 
   ],
 };
+
+dashboardMockData.user.name =
+  `${dashboardMockData.user.firstName} ${dashboardMockData.user.lastName}`;
