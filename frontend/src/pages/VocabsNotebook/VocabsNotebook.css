@@ -3,6 +3,8 @@ html, body {
   overflow: hidden; 
   margin: 0;
   padding: 0;
+  background-color: var(--color-background);
+
 }
 
 .vocab-page {
@@ -10,6 +12,8 @@ html, body {
   width: 100%;
   height: 90vh;
   overflow: hidden;
+    background-color: var(--color-background);
+
 }
 
 .vocab-content {
@@ -19,6 +23,8 @@ html, body {
   box-sizing: border-box;
   position: relative;
   overflow: hidden; 
+    background-color: var(--color-background);
+
 }
 
 .vocab-content .toolbar {

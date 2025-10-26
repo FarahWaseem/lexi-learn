@@ -6,17 +6,17 @@ export default function PracticeReminderCard() {
   return (
     <div className="practice-reminder-card">
       <div className="reminder-content">
-        <div className="reminder-header">
+        <div className="practice-reminder-header">
           <img
             src={zaytoonaReminder}
             alt="Zaytoona Reminder"
             className="reminder-icon"
           />
-          <div className="reminder-text">
-            <h4>Practice Reminder</h4>
+          <div className="practice-reminder-text">
+            <h4 className="practice-reminder-title">Practice Reminder</h4>
           </div>
         </div>
-        <div className="reminder-text">
+        <div className="practice-reminder-desc">
           <p>
             Don’t forget to practice today! A few minutes can make a big
             difference

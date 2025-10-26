@@ -1,25 +1,34 @@
-import { useUser } from "../../../../context/UserContext"; 
+import { useUser } from "../../../../context/UserContext";
+import { useTheme } from "../../../../context/ThemeContext";
 import notificationIcon from "/src/assets/icons/notification.svg";
+import moonIcon from "/src/assets/icons/moon.svg";
 import "./PreferencesTab.css";
 
 function PreferencesTab() {
   const { preferences, setPreferences } = useUser();
+  const { darkMode, toggleTheme } = useTheme();
 
+  // عند تبديل أي توجل (Notifications أو Dark Mode)
   const handleToggle = (key) => {
-    setPreferences({ ...preferences, [key]: !preferences[key] });
+    // تحديث التفضيلات داخل الكونتكست
+    const newPreferences = { ...preferences, [key]: !preferences[key] };
+    setPreferences(newPreferences);
+
+    // لو المستخدم غير وضع الثيم، نفّذ toggleTheme فعلاً
+    if (key === "darkMode") toggleTheme();
   };
 
   return (
     <div className="preferences-tab">
-
+      {/* 🔔 Notifications Toggle */}
       <div className="pref-item">
         <div className="pref-left">
           <div className="pref-icon-wrapper">
-           <img
-            src={notificationIcon}
-            alt="Notification Icon"
-            className="pref-icon filled"
-          />
+            <img
+              src={notificationIcon}
+              alt="Notification Icon"
+              className={`pref-icon ${preferences.notifications ? "active" : ""}`}
+            />
           </div>
 
           <div className="pref-texts">
@@ -40,13 +49,14 @@ function PreferencesTab() {
         </label>
       </div>
 
+      {/* 🌙 Dark Mode Toggle */}
       <div className="pref-item">
         <div className="pref-left">
           <div className="pref-icon-wrapper">
             <img
-              src="/src/assets/icons/moon.svg"
+              src={moonIcon}
               alt="Dark Mode Icon"
-              className="pref-icon filled"
+              className={`pref-icon ${darkMode ? "active" : ""}`}
             />
           </div>
 
@@ -61,7 +71,7 @@ function PreferencesTab() {
         <label className="switch">
           <input
             type="checkbox"
-            checked={preferences.darkMode}
+            checked={darkMode}
             onChange={() => handleToggle("darkMode")}
           />
           <span className="slider"></span>

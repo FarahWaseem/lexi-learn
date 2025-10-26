@@ -19,7 +19,7 @@
   height: 100px;
   border-radius: 50%;
   border: 1px solid var(--color-stroke);
-  background: var(--color-card-hover, #f7f7f7);
+  background: var(--color-card-hover);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -92,7 +92,7 @@ label {
   display: flex;
   align-items: center;
   gap: var(--spacing-3xs);
-  background: var(--color-card);
+  background-color: var(--color-card);
   border: 1px solid var(--color-stroke);
   border-radius: var(--radius-s);
   padding: var(--spacing-3xs) var(--spacing-xs);
@@ -117,6 +117,8 @@ label {
   font-weight: var(--font-medium);
   font-size: var(--font-6);
   color: var(--text-secondary);
+  background-color: var(--color-card);
+
 }
 
 .input-container input:not(:placeholder-shown) {

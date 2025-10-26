@@ -1,52 +1,45 @@
 .practice-reminder-card {
-  width: 100%;
-  padding: 16px;
-  background: var(--Colors-Basic-Card, #ffffff);
-  border-radius: 16px;
+  background-color: var(--color-card) !important;
+  border-radius: var(--radius-s);
+  padding: var(--spacing-xs);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 16px;
+  gap: var(--spacing-xs);
+  box-shadow: var(--shadow-card);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-.reminder-content {
+.practice-reminder-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 16px;
-  width: 100%;
-}
-
-.reminder-header {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  width: 100%;
 }
 
-.reminder-icon {
-  width: 40px;
-  height: 40px;
- object-fit: contain;
+.practice-reminder-title {
+  font-family: var(--font-family);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
 }
 
-.reminder-text h4 {
-  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
-  font-size: 24px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  line-height: 36px;
-  margin: 0;
+.practice-reminder-desc {
+  font-family: var(--font-family);
+  font-size: var(--font-7);
+  font-weight: var(--font-regular);
+  color: var(--text-secondary);
 }
 
-.reminder-text p {
-  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
-  font-size: 16px;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 400;
-  line-height: 24px;
-  margin: 0;
+.practice-reminder-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-green);
+  color: var(--text-on-primary);
+  border: none;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.practice-reminder-btn:hover {
+  background: var(--color-green-shade);
 }

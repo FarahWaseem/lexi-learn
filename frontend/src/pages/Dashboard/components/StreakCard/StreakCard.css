@@ -1,14 +1,15 @@
 .streak-card {
   width: 100%;
-  background: var(--Colors-Basic-Card, #ffffff);
-  border-radius: 16px;
-  padding: 16px;
+  background: var(--color-card);
+  border-radius: var(--radius-s);
+  padding: var(--spacing-xs);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  gap: 16px;
-  box-shadow: var(--shadow-card, none);
+  gap: var(--spacing-xs);
+  box-shadow: var(--shadow-card);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .streak-header {
@@ -24,30 +25,30 @@
 }
 
 .streak-header h4 {
-  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
-  font-size: 24px;
-  font-family: "DM Sans", sans-serif;
-  font-weight: 700;
+  color: var(--text-primary);
+  font-size: var(--font-4);
+  font-family: var(--font-family);
+  font-weight: var(--font-bold);
   line-height: 36px;
   margin: 0;
 }
 
 .streak-days {
   align-self: stretch;
-  color: var(--Colors-Brand-Green-Green, #007A3D);
-  font-size: 32px;
-  font-family: "DM Sans", sans-serif;
-  font-weight: 700;
+  color: var(--color-green);
+  font-size: var(--font-2);
+  font-family: var(--font-family);
+  font-weight: var(--font-bold);
   line-height: 51px;
   margin: 0;
 }
 
 .streak-desc {
   align-self: stretch;
-  color: var(--Colors-Text-Secondary, rgba(0, 0, 0, 0.60));
-  font-size: 16px;
-  font-family: "DM Sans", sans-serif;
-  font-weight: 400;
+  color: var(--text-secondary);
+  font-size: var(--font-6);
+  font-family: var(--font-family);
+  font-weight: var(--font-regular);
   line-height: 24px;
   margin: 0;
 }

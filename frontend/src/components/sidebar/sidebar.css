@@ -4,18 +4,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  background-color: #FFFFFF;
+  background-color: var(--color-card);
+  border-right: 1px solid var(--color-stroke);
   padding: 20px;
-}
-
-.sidebar.dark {
-  background-color: #222;
-  color: #fff;
-}
-
-.sidebar.light {
-  background-color: #FFFFFF;
-  color: #333;
+  box-shadow: var(--shadow-card);
 }
 
 .sidebar-header {
@@ -37,27 +29,31 @@
 .title {
   font-weight: bold;
   font-size: 18px;
+  color: var(--text-primary);
 }
 
 .subtitle {
   font-size: 12px;
-  color: gray;
+  color: var(--text-secondary);
 }
 
 .sidebar-links {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-bottom: 350px; 
+  margin-bottom: 350px;
 }
 
 .sidebar-links a {
-  font-weight: bold; 
+  font-weight: bold;
   display: flex;
   align-items: center;
   padding: 5px 10px;
   border-radius: 6px;
+  color: var(--text-primary);
+  transition: background 0.2s ease, color 0.2s ease;
 }
+
 .sidebar-links a img {
   width: 24px;
   height: 24px;
@@ -65,7 +61,23 @@
 }
 
 .sidebar-links a:hover {
-  color: #007a3d;
+  color: var(--color-green);
+  background: var(--color-green-shade);
+}
+
+.active-link {
+  color: var(--color-green);
+  font-weight: bold;
+  background-color: var(--color-green-shade);
+  border-radius: 6px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+}
+
+.active-link .icon {
+  filter: invert(28%) sepia(68%) saturate(1200%) hue-rotate(95deg)
+    brightness(50%) contrast(95%);
 }
 
 .sidebar-footer {
@@ -79,13 +91,24 @@
   display: inline-block;
   width: 40px;
   height: 22px;
-  color: #007a3d;
 }
 
 .switch input {
   opacity: 0;
   width: 0;
   height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-stroke);
+  transition: 0.4s;
+  border-radius: 34px;
 }
 
 .slider:before {
@@ -95,29 +118,15 @@
   width: 16px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--color-card);
   transition: 0.4s;
   border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: #007bff;
+  background-color: var(--color-green);
 }
 
 input:checked + .slider:before {
   transform: translateX(18px);
-}
-
-.active-link {
-  color: #007a3d !important; 
-  font-weight: bold;
-  background-color: rgba(0, 122, 61, 0.1); 
-  border-radius: 6px;
-  padding: 5px 10px;
-  display: flex; 
-  align-items: center;
-}
-.active-link .icon {
-  filter: invert(28%) sepia(68%) saturate(1200%) hue-rotate(95deg)
-  brightness(50%) contrast(95%);
 }

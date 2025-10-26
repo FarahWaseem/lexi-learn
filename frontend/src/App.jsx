@@ -7,10 +7,12 @@ import Dashboard from "./pages/Dashboard";
 import VocabsNotebook from "./pages/VocabsNotebook/VocabsNotebook";
 import LessonSammary from "./pages/LessonSammary/lessonSammary";
 import NoInternet from "./components/reusable/NoInternet/NoInternet";
+import { useTheme } from "./context/ThemeContext";
 import "./App.css";
 
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { theme } = useTheme(); 
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -38,7 +40,7 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${theme === "dark" ? "dark-mode" : ""}`}>
       <Sidebar />
       <div className="content-container">
         <Header />
