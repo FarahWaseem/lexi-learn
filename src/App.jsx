@@ -1,30 +1,41 @@
 // src/App.jsx
 import React, { useEffect, useRef } from "react";
-// import Practice from "./pages/Practice";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+
 import Sidebar from "./components/sidebar/Sidebar";
 import Lesson from "./pages/Lessons/Lesson";
+import SimpleLesson from "./pages/Lessons/SimpleLesson";
 import Dashboard from "./pages/Dashboard";
 import VocabsNotebook from "./pages/VocabsNotebook";
 import Header from "./components/header/Header";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import "./App.css";
-import SimpleLesson from "./pages/Lessons/SimpleLesson";
-
-import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/clerk-react";
 import Summary from "./pages/Summary";
-// ...
 
+import {
+  SignedIn,
+  SignedOut,
+  RedirectToSignIn,
+  useAuth,
+} from "@clerk/clerk-react";
 
+import "./App.css";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
 
 function App() {
   console.log("✅ App component rendered");
 
+  // 👇 الجديد: نحدد إذا إحنا على صفحة السمري
+  const location = useLocation();
+  const onSummary = location.pathname.startsWith("/summary/");
+
   return (
     <div className="app-container">
+      {/* يظهر المحتوى الكامل للتطبيق فقط عند تسجيل الدخول */}
       <SignedIn>
-        <AutoUpsert /> {/* ينادي /api/me مرّة واحدة */}
+        {/* 👇 لا تشغّل AutoUpsert على صفحة السمري لتفادي السباق */}
+        {!onSummary && <AutoUpsert />}
         <Sidebar />
         <div className="content-container">
           <Header />
@@ -32,23 +43,33 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
+
+              {/* الدروس */}
               <Route path="/lesson" element={<Lesson />} />
-              <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
-              <Route path="/login" element={<Navigate to="/dashboard" />} />
-              <Route path="/signup" element={<Navigate to="/dashboard" />} />
-              <Route path="/Lesson" element={<Lesson />} />
-              <Route path="/Lesson" element={<Lesson />} />;
-<Route path="/summary/:day" element={<Summary />} />
-              <Route path="/lesson1" element={<SimpleLesson />} />;
+              <Route path="/lesson1" element={<SimpleLesson />} />
+
+              {/* الملخّص */}
+              <Route path="/summary/:id" element={<Summary />} />
+
+              {/* أي مسار غير معروف داخل SignedIn يروح للداشبورد */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
       </SignedIn>
 
+      {/* وضع غير مسجّل الدخول: صفحات Auth + تحويل تلقائي */}
       <SignedOut>
         <Routes>
+          {/* صفحاتك المخصّصة */}
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+
+          {/* مسارات SSO الممكنة من Clerk لتفادي التحذيرات */}
+          <Route path="/login/sso-callback" element={<div />} />
+          <Route path="/sso-callback" element={<div />} />
+
+          {/* أي شيء آخر: وجّهي المستخدم لنافذة تسجيل الدخول */}
           <Route path="*" element={<RedirectToSignIn />} />
         </Routes>
       </SignedOut>
@@ -56,50 +77,88 @@ function App() {
   );
 }
 
-/** 🔁 يستدعي /api/me بعد تسجيل الدخول لعمل UPSERT للمستخدم – مرّة واحدة فقط */
+/** 🔁 يستدعي /api/me بعد تسجيل الدخول لعمل UPSERT للمستخدم – مرّة واحدة فقط مع إعادة محاولات ذكية */
 function AutoUpsert() {
   const { isSignedIn, getToken } = useAuth();
-  const calledRef = useRef(false); // يمنع التكرار
+  const calledRef = useRef(false);   // يمنع التكرار المنطقي
+  const abortRef = useRef(false);    // يلغي عند unmount
 
   useEffect(() => {
-    if (!isSignedIn) return;
-    if (calledRef.current) return;
+    abortRef.current = false;
+    return () => {
+      abortRef.current = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSignedIn || calledRef.current) return;
     calledRef.current = true;
 
     (async () => {
-      try {
-        const token = await getToken(); // بدون template
-        if (!token) {
-          console.warn("⚠️ No token from Clerk");
-          return;
-        }
+      const maxAttempts = 3;
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-        const url = "http://localhost:4000/api/me";
-        console.log("🔸 calling", url, "with token:", token.slice(0, 12) + "...");
+      let attempt = 0;
+      let lastError = null;
 
-        const res = await fetch(url, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const text = await res.text();
+      while (attempt < maxAttempts && !abortRef.current) {
+        attempt += 1;
         try {
-          const data = JSON.parse(text);
-          if (!res.ok) {
-            console.error(`❌ /api/me failed: ${res.status}`, data);
-          } else {
-            console.log("✅ /api/me ok:", data);
+          // المحاولة الأولى: توكن عادي. المحاولات التالية: skipCache
+          const token = await getToken(
+            attempt === 1 ? undefined : { skipCache: true }
+          );
+          if (!token) throw new Error("Missing Clerk token");
+
+          const url = `${API_BASE}/api/me`;
+          console.log(
+            `🔸 [AutoUpsert] attempt ${attempt}/${maxAttempts} →`,
+            url,
+            "token:",
+            token.slice(0, 12) + "…"
+          );
+
+          const res = await fetch(url, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          // حاول قراءة JSON، ولو فشل إرجع النص
+          let payload;
+          const text = await res.text();
+          try {
+            payload = JSON.parse(text);
+          } catch {
+            payload = text;
           }
-        } catch {
-          // رجع HTML (مثلاً "Cannot GET /") أو نص
+
           if (!res.ok) {
-            console.error(`❌ /api/me failed: ${res.status}`, text);
-          } else {
-            console.log("✅ /api/me ok (text):", text);
+            const msg =
+              typeof payload === "object"
+                ? payload?.error || JSON.stringify(payload)
+                : String(payload || "");
+            throw new Error(
+              `HTTP ${res.status} ${res.statusText || ""} — ${msg}`.trim()
+            );
           }
+
+          console.log("✅ [AutoUpsert] /api/me ok:", payload);
+          return; // نجاح — لا نعيد المحاولة
+        } catch (e) {
+          lastError = e;
+          console.warn(`⚠️ [AutoUpsert] attempt ${attempt} failed:`, e?.message);
+
+          // لو آخر محاولة، اخرج
+          if (attempt >= maxAttempts) break;
+
+          // backoff: 200ms, 600ms
+          const backoff = attempt === 1 ? 200 : 600;
+          await sleep(backoff);
         }
-      } catch (e) {
-        console.error("upsert failed", e);
+      }
+
+      if (!abortRef.current && lastError) {
+        console.error("❌ [AutoUpsert] giving up:", lastError.message);
       }
     })();
   }, [isSignedIn, getToken]);
@@ -108,5 +167,3 @@ function AutoUpsert() {
 }
 
 export default App;
-// داخل <Routes> تبع SignedIn
-
