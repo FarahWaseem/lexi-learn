@@ -1,0 +1,45 @@
+.practice-reminder-card {
+  background-color: var(--color-card) !important;
+  border-radius: var(--radius-s);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  box-shadow: var(--shadow-card);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.practice-reminder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.practice-reminder-title {
+  font-family: var(--font-family);
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.practice-reminder-desc {
+  font-family: var(--font-family);
+  font-size: var(--font-7);
+  font-weight: var(--font-regular);
+  color: var(--text-secondary);
+}
+
+.practice-reminder-btn {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  background: var(--color-green);
+  color: var(--text-on-primary);
+  border: none;
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.practice-reminder-btn:hover {
+  background: var(--color-green-shade);
+}

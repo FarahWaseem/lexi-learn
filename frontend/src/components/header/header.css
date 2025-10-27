@@ -1,91 +1,107 @@
-/* هيكل عام */
 .header {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 70px;
-  background: #f6f6f6;
-
+  width: 100%;
+  height: 110px;
+  background: var(--color-card);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
+  padding: 0 48px;
+  border-bottom: 1px solid var(--color-stroke);
+  box-shadow: none;
+  border-radius: 0;
   z-index: 1000;
+  position: sticky;
+  top: 0;
 }
 
-/* يسار */
 .header-left {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 16px;
+    overflow: visible;
+
 }
 
 .page-icon {
-  width: 40px;
-  height: 40px;
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+  display: block;
+  margin: 0;
+}
+
+.page-texts {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .page-title {
-  font-weight: bold;
-  font-size: 18px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: left;
 }
 
 .page-subtitle {
-  font-size: 12px;
-  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0;
+  text-align: left;
 }
 
-/* يمين */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
-/* زر اللغة */
 .lang-btn {
-  padding: 6px 12px;
-  border: 1px ;
+  padding: 8px 16px;
+  border: 1px solid var(--color-stroke);
   border-radius: 999px;
-  background: #ffffff;
-  color: #000000;
-  font-weight: 7px;
+  background: var(--color-card);
+  color: var(--text-primary);
+  font-weight: 600;
   cursor: pointer;
 }
 
-/* الإشعارات */
 .notification-wrapper {
   position: relative;
 }
 
 .notification-icon {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   padding: 5px;
+  background-color: var(--color-card);
+  border-radius: 50%;
   cursor: pointer;
-  background-color: white;
-  border-radius: 15px;
+  border: 1px solid var(--color-stroke);
 }
 
 .notification-badge {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #CE1126;
-  color: #fff;
+  background: var(--color-red);
+  color: var(--color-white);
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 50%;
 }
 
-/* البروفايل */
 .profile-wrapper {
-  /* position: relative; */
-  background-color: white;
-  border-radius: 15px;
-  width: 140px;
-  height: 34px;
-  
+  background-color: var(--color-card);
+  border-radius: 999px;
+  padding: 8px;
+  border: 1px solid var(--color-stroke);
 }
 
 .profile-btn {
@@ -95,65 +111,63 @@
   background: none;
   border: none;
   cursor: pointer;
+  padding: 0;
 }
 
 .profile-img {
   width: 32px;
   height: 32px;
+  object-fit: cover;
   border-radius: 50%;
 }
 
 .profile-name {
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .arrow-down {
-  font-size: 12px;
-  margin-left: 13px;
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
-/* القائمة المنسدلة */
 .profile-dropdown {
   position: absolute;
-  right: 50px;
   top: 100px;
-  width: 260px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  right: 48px;
+  width: 200px;
   border-radius: 8px;
-  padding: 15px;
-  z-index: 2000;
-  gap: 9px;
-
+  z-index: 1001;
 }
 
-
-.profile-setting{
-    display: flex;
-}
-
-.profile-logout{
-    display: flex;
-}
-.profile-dropdown h3 {
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.input-field {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-bottom: 10px;
-}
-
-.save-btn {
-  width: 100%;
-  padding: 8px;
-  background: #007a3d;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
+.profile-setting,
+.profile-logout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
   cursor: pointer;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: background 0.2s ease;
+}
+
+.profile-setting:hover,
+.profile-logout:hover {
+  background-color: var(--color-green-shade);
+}
+
+.profile-setting h5,
+.profile-logout h5 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.setting-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }

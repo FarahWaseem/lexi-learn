@@ -1,0 +1,52 @@
+.practice-reminder-card {
+  width: 100%;
+  padding: 16px;
+  background: var(--Colors-Basic-Card, #ffffff);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+}
+
+.reminder-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.reminder-icon {
+  width: 40px;
+  height: 40px;
+ object-fit: contain;
+}
+
+.reminder-text h4 {
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 24px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  line-height: 36px;
+  margin: 0;
+}
+
+.reminder-text p {
+  color: var(--Colors-Text-primary, rgba(0, 0, 0, 0.87));
+  font-size: 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0;
+}

@@ -25,12 +25,10 @@ function VocabsNotebook() {
   ]);
 
   const handleDelete = (wordToDelete) => {
-    // منطق الحذف: تحديث القائمة لإزالة الكلمة التي تطابق 'wordToDelete'
     setWordList((prev) => prev.filter((w) => w.word !== wordToDelete));
   };
 
   const filtered = useMemo(() => {
-    // **تغيير 'words' إلى 'wordList'**
     let result = wordList.filter((w) =>
       w.word.toLowerCase().includes(search.toLowerCase())
     );
@@ -46,7 +44,6 @@ function VocabsNotebook() {
     );
 
     return result;
-  // **إضافة 'wordList' إلى مصفوفة التبعيات**
   }, [wordList, search, tempLessons, tempOrder]); 
 
   const openFilter = () => {
@@ -71,7 +68,6 @@ function VocabsNotebook() {
     setTempLessons([]);
   };
 
-  // **تغيير 'words' إلى 'wordList'**
   const uniqueLessons = [...new Set(wordList.map((w) => w.lesson))]; 
 
   const filterSections = [

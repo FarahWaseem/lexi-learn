@@ -23,7 +23,6 @@ export default function Filter({ title, sections, onClear, onCancel, onDone }) {
   return (
     <div className="filter-overlay">
       <div className="filter-modal">
-        {/* Header */}
         <div className="filter-header">
           <h3 className="filter-title">{title}</h3>
           <button className="clear-btn" onClick={handleClear} id="btn-clear">
@@ -31,7 +30,6 @@ export default function Filter({ title, sections, onClear, onCancel, onDone }) {
           </button>
         </div>
 
-        {/* Body */}
         <div className="filter-body">
           {sections.map((section, idx) => (
             <div key={idx} className="filter-section">
@@ -69,7 +67,6 @@ export default function Filter({ title, sections, onClear, onCancel, onDone }) {
           ))}
         </div>
 
-        {/* Footer */}
         <div className="filter-footer">
           <Button variant="secondary" onClick={handleCancel} id="btn-cancel">
             Cancel
