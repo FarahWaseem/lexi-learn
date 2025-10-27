@@ -1,7 +1,8 @@
 .profile-dropdown {
   width: 200px;
   background: var(--color-card);;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-stroke);
   border-radius: 16px;
   padding: 8px;
   display: flex;
@@ -52,6 +53,6 @@
 .label {
   font-family: "DM Sans", sans-serif;
   font-size: 16px;
-  color: rgba(0, 0, 0, 0.87);
+  color: var(--text-primary);
   line-height: 24px;
 }

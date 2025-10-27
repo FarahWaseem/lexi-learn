@@ -36,8 +36,13 @@
 .pref-icon {
   width: 24px;
   height: 24px;
+  color: var(--color-green)!important;
   opacity: 0.6;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  transition: filter 0.3s ease, opacity 0.3s ease;  
+}
+
+svg.pref-icon path {
+  fill: var(--color-green) !important;
 }
 
 .pref-texts {

@@ -12,7 +12,9 @@ import "./App.css";
 
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const { theme } = useTheme(); 
+
+  // ✅ التعديل هنا — نستدعي darkMode بدل theme
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -39,8 +41,9 @@ function App() {
     return <NoInternet onRetry={handleRetry} />;
   }
 
+  // ✅ هنا كمان نغير الشرط داخل الكلاس
   return (
-    <div className={`app-container ${theme === "dark" ? "dark-mode" : ""}`}>
+    <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
       <Sidebar />
       <div className="content-container">
         <Header />
