@@ -4,7 +4,16 @@ import { useState, useEffect } from "react";
 import { useClerk, useAuth, useUser } from "@clerk/clerk-react";
 import "./Header.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+// ✅ استيراد الصور والأيقونات كـ modules ليشتغلوا في build + PWA
+import imgZaytoona from "../../assets/images/zaytoonaReadingBook.png";
+import imgLessonPage from "../../assets/images/lessonpage.png";
+import iconNotif from "../../assets/icons/notification.svg";
+import iconUserCircle from "../../assets/icons/User Circle.svg";
+import iconArrowDown from "../../assets/icons/arrow-down.svg";
+import iconSetting from "../../assets/icons/setting-2.svg";
+import iconLogout from "../../assets/icons/Logout icon.svg";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
 function Header() {
   const location = useLocation();
@@ -14,15 +23,21 @@ function Header() {
   const { getToken } = useAuth();
   const { user: clerkUser } = useUser();
 
-  const [firstName, setFirstName] = useState(
-    clerkUser?.firstName || "User"
-  );
+  const [firstName, setFirstName] = useState(clerkUser?.firstName || "User");
 
   // 🔹 جلب الاسم من قاعدة البيانات (العمود first_name فقط)
   useEffect(() => {
     let abort = false;
     (async () => {
       try {
+        // ✅ لو مافي إنترنت، استخدم الاسم من التخزين المحلي
+        if (!navigator.onLine) {
+          const cached = localStorage.getItem("me");
+          if (cached && !abort)
+            setFirstName(JSON.parse(cached)?.first_name || firstName);
+          return;
+        }
+
         const token = await getToken();
         if (!token) throw new Error("Missing Clerk token");
 
@@ -34,6 +49,9 @@ function Header() {
         const data = await res.json();
         if (!abort && data?.ok && data?.user?.first_name) {
           setFirstName(data.user.first_name);
+          try {
+            localStorage.setItem("me", JSON.stringify(data.user));
+          } catch {}
         }
       } catch {
         if (!abort && clerkUser?.firstName) {
@@ -52,24 +70,24 @@ function Header() {
     "/dashboard": {
       title: "Dashboard",
       subtitle: "Overview",
-      img: "/src/assets/images/zaytoonaReadingBook.png",
+      img: imgZaytoona,
     },
     "/lesson": {
       title: "Lesson",
       subtitle: "Manage your app",
-      img: "/src/assets/images/lessonpage.png",
+      img: imgLessonPage,
     },
     "/vocabsNotebook": {
       title: "Vocabs notebook",
       subtitle: "Your details",
-      img: "/src/assets/images/lessonpage.png",
+      img: imgLessonPage,
     },
   };
 
   const current = pageInfo[location.pathname] || {
     title: "Welcome",
     subtitle: "Choose a page",
-    img: "/src/assets/images/zaytoonaReadingBook.png",
+    img: imgZaytoona,
   };
 
   const handleLogout = async () => {
@@ -105,7 +123,7 @@ function Header() {
         {/* الإشعارات */}
         <div className="notification-wrapper">
           <img
-            src="/src/assets/icons/notification.svg"
+            src={iconNotif}
             alt="notifications"
             className="notification-icon"
           />
@@ -118,18 +136,10 @@ function Header() {
             onClick={() => setIsProfileOpen(!isProfileOpen)}
             className="profile-btn"
           >
-            <img
-              src="/src/assets/icons/User Circle.svg"
-              alt="profile"
-              className="profile-img"
-            />
+            <img src={iconUserCircle} alt="profile" className="profile-img" />
             {/* ✅ الاسم الأول فقط من قاعدة البيانات */}
             <span className="profile-name">{firstName}</span>
-            <img
-              src="/src/assets/icons/arrow-down.svg"
-              alt="arrow"
-              className="arrow-down"
-            />
+            <img src={iconArrowDown} alt="arrow" className="arrow-down" />
           </button>
 
           {isProfileOpen && (
@@ -141,7 +151,7 @@ function Header() {
               >
                 <div className="profile-setting">
                   <img
-                    src="/src/assets/icons/setting-2.svg"
+                    src={iconSetting}
                     alt="Setting"
                     className="setting-img"
                   />
@@ -154,11 +164,7 @@ function Header() {
                 className="profile-logout"
                 onClick={handleLogout}
               >
-                <img
-                  src="/src/assets/icons/Logout icon.svg"
-                  alt="Logout"
-                  className="setting-img"
-                />
+                <img src={iconLogout} alt="Logout" className="setting-img" />
                 <h5>Logout</h5>
               </button>
             </div>

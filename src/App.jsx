@@ -21,7 +21,7 @@ import {
 
 import "./App.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
 function App() {
   console.log("✅ App component rendered");

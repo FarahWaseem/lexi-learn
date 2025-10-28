@@ -40,7 +40,7 @@ const io = new IOServer(server, {
   },
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 const PUBLIC = path.join(__dirname, "public");
 const UPLOADS = path.join(__dirname, "uploads");
 
@@ -276,6 +276,16 @@ async function createUserUtterance(attemptId, text) {
   return u.rows[0];
 }
 
+// ✅ جديد: خزّن رسائل الـAI (السؤال/التغذية الراجعة)
+async function createAiUtterance(attemptId, text) {
+  const u = await pool.query(
+    `INSERT INTO utterances (attempt_id, role, text)
+     VALUES ($1,'ai',$2) RETURNING *`,
+    [attemptId, String(text || "")]
+  );
+  return u.rows[0];
+}
+
 /** helper: read summary payload for a session (same as GET /summary) */
 async function loadSessionSummary(sessionId, userId) {
   const basics = await pool.query(
@@ -306,6 +316,24 @@ async function loadSessionSummary(sessionId, userId) {
   );
 
   return { session: basics.rows[0], attempts: rows.rows };
+}
+
+// ✅ تواريخ آمنة للـ PDFKit
+function asDate(v) {
+  if (v instanceof Date) return v;
+  if (typeof v === "string" || typeof v === "number") {
+    const d = new Date(v);
+    if (!isNaN(d)) return d;
+  }
+  return new Date();
+}
+
+// ✅ عرض التاريخ بشكل لطيف في النص
+function fmtDate(v) {
+  if (!v) return "-";
+  const d = new Date(v);
+  if (isNaN(d)) return "-";
+  return d.toLocaleString(); // ثابت ممكن: toLocaleString("en-GB",{hour12:false})
 }
 
 // ---------- Basic REST routes ----------
@@ -370,7 +398,12 @@ app.get("/api/me", requireAuth, async (req, res) => {
   try {
     const auth = getAuth(req);
     const userId = await requireUser(req);
-    const [{ rows: [dbUser] }, uname] = await Promise.all([
+    const [
+      {
+        rows: [dbUser],
+      },
+      uname,
+    ] = await Promise.all([
       pool.query(`SELECT id, first_name, last_name, email FROM users WHERE id=$1`, [userId]),
       resolveUsername(auth.userId),
     ]);
@@ -429,7 +462,6 @@ const startHandler = async (req, res) => {
 app.post("/api/sessions/start", requireAuth, startHandler);
 app.post("/api/sessions", requireAuth(), startHandler);
 
-
 // ---------- Utterances: audio upload (optional) ----------
 const audioStorage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOADS),
@@ -448,13 +480,7 @@ app.post("/api/utterances/audio", requireAuth, audioUpload.single("audio"), asyn
     const wavPath = inputPath.replace(path.extname(inputPath), ".wav");
 
     await new Promise((resolve, reject) => {
-      ffmpeg(inputPath)
-        .audioChannels(1)
-        .audioFrequency(16000)
-        .toFormat("wav")
-        .on("end", resolve)
-        .on("error", reject)
-        .save(wavPath);
+      ffmpeg(inputPath).audioChannels(1).audioFrequency(16000).toFormat("wav").on("end", resolve).on("error", reject).save(wavPath);
     });
 
     const transcript = "(audio received)";
@@ -472,6 +498,9 @@ app.post("/api/utterances/audio", requireAuth, audioUpload.single("audio"), asyn
        SET feedback=$2, fluency_score=$3, grammar_score=$4, vocab_score=$5`,
       [attempt.id, detailedFeedback, corr.fluency, corr.grammar, corr.vocab]
     );
+
+    // 🟢 خزّن الفيدباك AI
+    await createAiUtterance(attempt.id, `Feedback:\n${detailedFeedback}`);
 
     res.json({ transcript, correction: { ...corr, feedback: detailedFeedback } });
   } catch (e) {
@@ -501,6 +530,9 @@ app.post("/api/utterances/text", requireAuth, async (req, res) => {
       [attempt.id, detailedFeedback, corr.fluency, corr.grammar, corr.vocab]
     );
 
+    // 🟢 خزّن الفيدباك AI
+    await createAiUtterance(attempt.id, `Feedback:\n${detailedFeedback}`);
+
     res.json({
       transcript: text || "",
       correction: { ...corr, feedback: detailedFeedback },
@@ -528,7 +560,7 @@ app.post("/api/sessions/:id/finish", requireAuth, async (req, res) => {
 });
 
 // ---------- Summary ----------
-app.get("/api/sessions/:id/summary", requireAuth(), async (req, res) =>{
+app.get("/api/sessions/:id/summary", requireAuth(), async (req, res) => {
   try {
     const uuidUserId = await requireUser(req);
     const { id } = req.params;
@@ -540,10 +572,12 @@ app.get("/api/sessions/:id/summary", requireAuth(), async (req, res) =>{
     res.status(500).json({ error: e.message || "summary failed" });
   }
 });
+
 app.get("/api/my/topics", requireAuth(), async (req, res) => {
   try {
     const uuidUserId = await requireUser(req); // ← هذا نص UUID
-    const { rows } = await pool.query(`
+    const { rows } = await pool.query(
+      `
       SELECT
         dt.day_number            AS day,
         dt.title_en              AS topic,
@@ -561,14 +595,15 @@ app.get("/api/my/topics", requireAuth(), async (req, res) => {
         )                        AS is_completed
       FROM daily_topics dt
       ORDER BY dt.day_number ASC
-    `, [uuidUserId]); //  ← استخدمي uuidUserId
+    `,
+      [uuidUserId]
+    ); //  ← استخدمي uuidUserId
     res.json({ ok: true, items: rows, total: rows.length });
   } catch (e) {
     console.error("GET /api/my/topics failed:", e);
     res.status(500).json({ ok: false, error: "Server error" });
   }
 });
-
 
 app.get("/api/sessions/last", requireAuth(), async (req, res) => {
   try {
@@ -595,13 +630,26 @@ app.get("/api/sessions/last", requireAuth(), async (req, res) => {
 
 // ---------- Export PDF (Pretty) ----------
 app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
+  // جهّز الهيدر بس قبل ما نبدأ الستريم فعليًا
+  res.setHeader("Content-Type", "application/pdf");
+
+  const doc = new PDFDocument({ margin: 40, size: "A4" });
+  let pdfErrored = false;
+  doc.on("error", (err) => {
+    pdfErrored = true;
+    console.error("PDF error:", err?.message || err);
+    try {
+      res.end();
+    } catch {}
+  });
+
   try {
     const auth = getAuth(req);
-    const uname = await resolveUsername(auth.userId); // اسم المستخدم من Clerk ليوضع في الـPDF
+    const uname = await resolveUsername(auth.userId);
     const uuidUserId = await requireUser(req);
     const { id } = req.params;
 
-    // نقرأ الميتا + محاولات + التصحيحات (كما كنتِ تعملي)
+    // الميتا
     const s = await pool.query(
       `SELECT s.id, s.started_at, s.completed_at, s.status,
               t.title_en, t.day_number, t.level
@@ -611,8 +659,9 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
       [id, uuidUserId]
     );
     const session = s.rows[0];
-    if (!session) return res.status(404).end();
+    if (!session) return res.status(404).json({ error: "Not found" });
 
+    // الأسئلة + آخر جواب للمستخدم + التصحيح (feedback) + السكورات
     const rows = await pool.query(
       `SELECT tq.question_idx, tq.prompt_en,
               (SELECT text FROM utterances u
@@ -630,7 +679,31 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
       [id]
     );
 
-    // أجزاء إضافية من ملخص الدرس الجاهز
+    // 🟢 كل المحادثة لكل سؤال (AI + User) بترتيب زمني
+    const convo = await pool.query(
+      `SELECT
+         tq.question_idx,
+         u.role,
+         u.text,
+         u.created_at
+       FROM attempts a
+       JOIN topic_questions tq ON tq.id = a.question_id
+       JOIN utterances u       ON u.attempt_id = a.id
+       WHERE a.session_id = $1
+       ORDER BY tq.question_idx ASC, u.created_at ASC`,
+      [id]
+    );
+    const byQuestion = new Map();
+    for (const row of convo.rows) {
+      if (!byQuestion.has(row.question_idx)) byQuestion.set(row.question_idx, []);
+      byQuestion.get(row.question_idx).push({
+        role: row.role,
+        text: row.text || "",
+        at: row.created_at,
+      });
+    }
+
+    // مفردات إضافية (اختياري)
     const extra = await pool.query(
       `SELECT tw.term AS word, COALESCE(tw.meaning, '') AS meaning
        FROM sessions s
@@ -640,9 +713,9 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
        LIMIT 8`,
       [id]
     );
-    const vocab = extra.rows;
+    const vocab = extra.rows || [];
 
-    // احسب أداء إجمالي مبسّط
+    // أداء إجمالي
     const scoreAgg = await pool.query(
       `SELECT ROUND(AVG((COALESCE(c.fluency_score,0)+COALESCE(c.grammar_score,0)+COALESCE(c.vocab_score,0))/3.0))::int AS overall
        FROM attempts a LEFT JOIN corrections c ON c.attempt_id=a.id
@@ -651,84 +724,64 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
     );
     const performance = Number(scoreAgg.rows[0]?.overall || 0);
 
-    // ======  PDFKit  ======
-    res.setHeader("Content-Type", "application/pdf");
+    // نبدأ الستريم الآن بعد ما تأكّدنا من كل البيانات
     res.setHeader("Content-Disposition", `attachment; filename="lesson-${session.day_number}.pdf"`);
+    doc.pipe(res);
 
-    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    // معلومات المستند مع تواريخ سليمة
     doc.info = {
       Title: `Lesson Day ${session.day_number}`,
       Author: "LexiLearn",
       Subject: "Lesson Summary",
+      CreationDate: asDate(session.started_at || Date.now()),
+      ModDate: asDate(session.completed_at || Date.now()),
     };
-    doc.pipe(res);
 
-    // ---- (اختياري) خطوط عربية:
+    // خطوط
     // const arabicFont = path.join(PUBLIC, "fonts", "NotoNaskhArabic-Regular.ttf");
-    // if (fs.existsSync(arabicFont)) doc.font(arabicFont); else doc.font("Helvetica");
+    // doc.font(fs.existsSync(arabicFont) ? arabicFont : "Helvetica");
     doc.font("Helvetica");
 
-    // ألوان وهوية خفيفة
-    const ACCENT = "#2F855A";  // أخضر
-    const MUTED  = "#6B7280";  // رمادي
-    const LINE   = "#E5E7EB";  // حدود فاتحة
+    // ألوان
+    const ACCENT = "#2F855A";
+    const MUTED = "#6B7280";
+    const LINE = "#E5E7EB";
 
     // Helpers
-    const drawHeader = () => {
-      // بانر علوي
-      doc.save();
-      doc.rect(40, 40, doc.page.width - 80, 70).fill(ACCENT);
-      doc.fill("#fff").fontSize(16).text(`LexiLearn — Lesson Summary`, 52, 52, { width: doc.page.width - 104, align: "left" });
-      doc.fontSize(12).text(`Student: ${uname}`, 52, 78, { width: doc.page.width - 104, align: "left" });
-      doc.restore();
-
-      // عنوان رئيسي تحت البانر
-      doc.moveDown(2);
-      doc.fontSize(18).fillColor("#111827")
-        .text(`Day ${session.day_number}: ${session.title_en || ""}  •  Level ${session.level}`, { continued: false });
-      doc.moveDown(0.3);
-      doc.fontSize(10).fillColor(MUTED)
-        .text(`Started: ${session.started_at}     Completed: ${session.completed_at || "-"}`);
-      drawLine();
-    };
-
     const drawLine = () => {
       doc.moveDown(0.5);
       doc.strokeColor(LINE).lineWidth(1).moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke();
       doc.moveDown(0.8);
     };
-
     const sectionTitle = (title) => {
       doc.moveDown(0.3);
-      doc.fontSize(12).fillColor(ACCENT).text(title.toUpperCase(), { underline: false });
+      doc.fontSize(12).fillColor(ACCENT).text(title.toUpperCase());
       doc.moveDown(0.4);
     };
-
     const kv = (label, value) => {
       doc.fontSize(9).fillColor(MUTED).text(label);
       doc.fontSize(11).fillColor("#111827").text(value);
       doc.moveDown(0.2);
     };
-
     const scoreBar = (label, val) => {
       const maxW = doc.page.width - 160;
-      const x = 52, y = doc.y + 2;
+      const x = 52,
+        y = doc.y + 2;
       const w = Math.max(0, Math.min(maxW, Math.round((val / 100) * maxW)));
       doc.fontSize(11).fillColor("#111827").text(`${label}: ${val}%`, 52, doc.y);
-      // شريط خلفي
       doc.roundedRect(x, y + 16, maxW, 10, 5).fillAndStroke(LINE, LINE);
-      // شريط أمامي
       doc.roundedRect(x, y + 16, w, 10, 5).fill(ACCENT);
       doc.moveDown(1.2);
     };
-
     const pill = (txt) => {
-      // شارة صغيرة (chip)
-      const px = doc.x, py = doc.y;
-      const padX = 8, padY = 3;
+      const px = doc.x,
+        py = doc.y;
+      const padX = 8,
+        padY = 3;
       const w = doc.widthOfString(txt) + padX * 2;
       const h = doc.currentLineHeight() + padY * 2;
-      doc.save()
+      doc
+        .save()
         .roundedRect(px, py, w, h, 8)
         .fillColor("#DCFCE7")
         .strokeColor("#BBF7D0")
@@ -739,73 +792,63 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
         .restore();
       doc.moveDown(1.1);
     };
-
     const boxed = (title, body) => {
-      const x = 52, y = doc.y, w = doc.page.width - 104;
-      const hStart = y + 10;
-      doc.save()
-        .roundedRect(x, y, w, 0, 12) // height 0 الآن؛ سنغلق لاحقاً بعد الكتابة
-        .clip();
-
+      const x = 52,
+        y = doc.y,
+        w = doc.page.width - 104;
+      doc.save().roundedRect(x, y, w, 0, 12).clip();
       doc.fillColor("#111827").fontSize(12).text(title, x + 12, y + 10, { width: w - 24 });
       doc.moveDown(0.4);
       doc.fontSize(11).fillColor("#374151").text(body, x + 12, doc.y, { width: w - 24 });
-
       const hEnd = doc.y + 10;
       doc.restore();
-      // حدود الصندوق
-      doc.roundedRect(x, y, w, hEnd - y, 12)
-        .lineWidth(1).strokeColor(LINE).stroke();
+      doc.roundedRect(x, y, w, hEnd - y, 12).lineWidth(1).strokeColor(LINE).stroke();
       doc.moveDown(0.6);
     };
-
     const vocabGrid = (items) => {
       if (!items?.length) return;
-
       sectionTitle("New Vocabulary");
-      const cols = 2;
-      const gutter = 16;
+      const cols = 2,
+        gutter = 16;
       const usableW = doc.page.width - 104;
       const colW = (usableW - gutter) / cols;
-      let cx = 52, cy = doc.y;
-
+      let cx = 52,
+        cy = doc.y;
       items.forEach((it, i) => {
-        if (i % cols === 0 && i > 0) { // سطر جديد
+        if (i % cols === 0 && i > 0) {
           cx = 52;
           cy = doc.y + 6;
         }
-        // صندوق
-        doc.save()
+        doc
+          .save()
           .roundedRect(cx, cy, colW, 60, 10)
-          .fillColor("#F9FAFB").strokeColor(LINE).lineWidth(1).fillAndStroke()
-          .fillColor("#111827").fontSize(12).text(it.word || "-", cx + 10, cy + 8, { width: colW - 20 })
-          .fontSize(10).fillColor(MUTED).text((it.meaning || "").trim(), cx + 10, doc.y + 2, { width: colW - 20 })
+          .fillColor("#F9FAFB")
+          .strokeColor(LINE)
+          .lineWidth(1)
+          .fillAndStroke()
+          .fillColor("#111827")
+          .fontSize(12)
+          .text(it.word || "-", cx + 10, cy + 8, { width: colW - 20 })
+          .fontSize(10)
+          .fillColor(MUTED)
+          .text((it.meaning || "").trim(), cx + 10, doc.y + 2, { width: colW - 20 })
           .restore();
-
-        // انتقل للعمود التالي
         cx += colW + gutter;
-        // لو وصلنا العمود الأخير، حدّث y
-        if ((i % cols) === cols - 1) {
-          doc.y = cy + 60;
-        }
+        if (i % cols === cols - 1) doc.y = cy + 60;
       });
       doc.moveDown(0.6);
       drawLine();
     };
-
     const questionBlock = (q) => {
-      // عنوان السؤال
+      // ✅ العنوان + السؤال + الجواب + التصحيح (feedback)
       doc.fontSize(13).fillColor("#111827").text(`Q${q.question_idx}: ${q.prompt_en}`, { underline: true });
       doc.moveDown(0.2);
-      // إجابة المستخدم
       doc.fontSize(11).fillColor("#374151").text(`Your answer: ${q.user_text || "-"}`);
-      // فيدباك
       if (q.feedback) {
         doc.moveDown(0.2);
         doc.fontSize(11).fillColor("#111827").text("Feedback:");
         doc.fontSize(11).fillColor("#374151").text(q.feedback);
       }
-      // شرائط السكور المصغّرة (إن وجدت)
       const parts = [];
       if (q.fluency_score != null) parts.push(`Fluency ${q.fluency_score}`);
       if (q.grammar_score != null) parts.push(`Grammar ${q.grammar_score}`);
@@ -814,16 +857,25 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
         doc.moveDown(0.2);
         parts.forEach((p) => pill(p));
       }
-
-      // فاصل
       drawLine();
-
-      // تجنّب نزول عناصر على حافة الصفحة
       if (doc.y > doc.page.height - 120) doc.addPage();
     };
 
     // ====== بناء المستند ======
-    drawHeader();
+    // Header
+    doc.save();
+    doc.rect(40, 40, doc.page.width - 80, 70).fill(ACCENT);
+    doc.fill("#fff")
+      .fontSize(16)
+      .text(`LexiLearn — Lesson Summary`, 52, 52, { width: doc.page.width - 104, align: "left" });
+    doc.fontSize(12).text(`Student: ${uname}`, 52, 78, { width: doc.page.width - 104, align: "left" });
+    doc.restore();
+
+    doc.moveDown(2);
+    doc.fontSize(18).fillColor("#111827").text(`Day ${session.day_number}: ${session.title_en || ""}  •  Level ${session.level}`);
+    doc.moveDown(0.3);
+    doc.fontSize(10).fillColor(MUTED).text(`Started: ${fmtDate(session.started_at)}     Completed: ${fmtDate(session.completed_at)}`);
+    drawLine();
 
     // Overview
     sectionTitle("Overview");
@@ -831,59 +883,78 @@ app.get("/api/sessions/:id/export.pdf", requireAuth(), async (req, res) => {
     kv("Lesson Title", session.title_en || "-");
     kv("Day / Level", `Day ${session.day_number} • Level ${session.level}`);
     kv("Status", String(session.status || "-"));
-    kv("Started", String(session.started_at || "-"));
-    kv("Completed", String(session.completed_at || "-"));
+    kv("Started", fmtDate(session.started_at));
+    kv("Completed", fmtDate(session.completed_at));
     doc.moveDown(0.4);
     scoreBar("Overall Performance", performance);
     drawLine();
 
-    // نقاط إيجابية بسيطة حسب الأداء
+    // Highlights
     const positive = [];
     if (performance >= 40) positive.push("Clear pronunciation");
     if (performance >= 50) positive.push("Quick response time");
     if (performance >= 60) positive.push("Built correct sentences");
     if (!positive.length) positive.push("You showed persistence — keep going!");
-
     sectionTitle("Highlights");
     positive.forEach((p) => pill(p));
     drawLine();
 
-    // Vocabulary Grid
+    // Vocabulary
     vocabGrid(vocab);
 
-    // Recap / Grammar note بصناديق
-    const recapText = rows.rows.length
-      ? `Today, you practiced: ${rows.rows.slice(0, 2).map(r => r.prompt_en).join("; ")}.`
-      : "Good practice today.";
+    // Recap + Grammar Feedback (لو موجود)
+    const recapText = rows.rows.length ? `Today, you practiced: ${rows.rows.slice(0, 2).map((r) => r.prompt_en).join("; ")}.` : "Good practice today.";
     boxed("Lesson Recap", recapText);
-
     const firstFb = rows.rows.find((r) => r.feedback);
-    if (firstFb?.feedback) {
-      boxed("Grammar Feedback", firstFb.feedback);
-    }
+    if (firstFb?.feedback) boxed("Grammar Feedback", firstFb.feedback);
     drawLine();
 
-    // الأسئلة
+    // 🟢 Conversation Timeline (المحادثة كاملة لكل سؤال)
+    sectionTitle("Conversation Timeline");
+    for (const [idx, msgs] of byQuestion.entries()) {
+      doc.fontSize(13).fillColor("#111827").text(`Q${idx}`, { underline: true });
+      doc.moveDown(0.2);
+
+      for (const m of msgs) {
+        const who = m.role === "ai" ? "AI" : "You";
+        const color = m.role === "ai" ? "#111827" : "#1F2937";
+        doc.fontSize(10).fillColor("#6B7280").text(`${who} • ${new Date(m.at).toLocaleString("en-GB", { hour12: false })}`);
+        doc.moveDown(0.1);
+        doc.fontSize(11).fillColor(color).text(m.text, { width: 480 });
+        doc.moveDown(0.5);
+
+        // تجنّب قص النص في نهاية الصفحة
+        if (doc.y > doc.page.height - 120) doc.addPage();
+      }
+
+      doc.moveDown(0.8);
+      drawLine();
+    }
+
+    // Per-Question (العنوان + السؤال + التصحيح ضمنيًا)
     sectionTitle("Per-Question Details");
     rows.rows.forEach(questionBlock);
 
-    // Footer (أرقام الصفحات)
-    const range = doc.bufferedPageRange(); // { start, count }
+    // Footer صفحات
+    const range = doc.bufferedPageRange();
     for (let i = range.start; i < range.start + range.count; i++) {
       doc.switchToPage(i);
       const label = `Page ${i + 1} of ${range.count}`;
-      doc.fontSize(9).fillColor(MUTED)
-        .text(label, 40, doc.page.height - 30, { width: doc.page.width - 80, align: "center" });
+      doc.fontSize(9).fillColor(MUTED).text(label, 40, doc.page.height - 30, { width: doc.page.width - 80, align: "center" });
     }
 
     doc.end();
   } catch (e) {
     console.error("GET /api/sessions/:id/export.pdf", e);
-    res.status(500).end();
+    if (!pdfErrored) {
+      try {
+        res.status(500).json({ error: "Failed to build PDF" });
+      } catch {}
+    }
   }
 });
 
-
+// ---------- WebSocket Auth ----------
 io.use(async (socket, next) => {
   if (process.env.SKIP_WS_AUTH === "1") {
     try {
@@ -988,7 +1059,9 @@ io.on("connection", (socket) => {
           return;
         }
 
-        await ensureAttempt(session.id, qIndex);
+        // أنشئ attempt وخزّن السؤال كرسالة AI
+        const attempt = await ensureAttempt(session.id, qIndex);
+        await createAiUtterance(attempt.id, `Q${qIndex}: ${q.prompt_en}`);
 
         io.to(socket.id).emit("ask_question", {
           sessionId: session.id,
@@ -1017,8 +1090,7 @@ io.on("connection", (socket) => {
           let filteredIssues = corr.issues || [];
 
           if (isSpoken) {
-            const noise =
-              /(capitalize|capitalization|upper case|question mark|punctuation|comma|period)/i;
+            const noise = /(capitalize|capitalization|upper case|question mark|punctuation|comma|period)/i;
             filteredIssues = filteredIssues.filter((it) => !noise.test(`${it.type || ""} ${it.note || ""}`));
 
             const raw = String(text || "").trim();
@@ -1028,14 +1100,11 @@ io.on("connection", (socket) => {
 
             const fillers = (raw.match(/\b(um+|uh+|erm+|like|you know)\b/gi) || []).length;
             const repeats = (raw.match(/\b(\w+)\s+\1\b/gi) || []).length;
-            const longSentences = raw
-              .split(/[.!?]+/)
-              .filter((s) => s.trim().split(/\s+/).length > 20).length;
+            const longSentences = raw.split(/[.!?]+/).filter((s) => s.trim().split(/\s+/).length > 20).length;
 
             const tips = [];
             tips.push(`Speaking speed ≈ ${wpm} wpm (target 110–160 for clarity).`);
-            if (fillers > 0)
-              tips.push(`Try fewer fillers (found ~${fillers}). Pause instead of “um/uh/like”.`);
+            if (fillers > 0) tips.push(`Try fewer fillers (found ~${fillers}). Pause instead of “um/uh/like”.`);
             if (repeats > 0) tips.push(`A bit of repetition detected (~${repeats}). Finish ideas then move on.`);
             if (longSentences > 0) tips.push(`Some sentences are long. Break ideas into shorter chunks.`);
 
@@ -1048,10 +1117,7 @@ io.on("connection", (socket) => {
             ? "\n\nKey issues:\n" +
               filteredIssues
                 .slice(0, 10)
-                .map(
-                  (it, i) =>
-                    `- ${i + 1}. [${it.type || "grammar"}] "${it.before}" → "${it.after}" — ${it.note || ""}`
-                )
+                .map((it, i) => `- ${i + 1}. [${it.type || "grammar"}] "${it.before}" → "${it.after}" — ${it.note || ""}`)
                 .join("\n")
             : "";
 
@@ -1060,7 +1126,7 @@ io.on("connection", (socket) => {
             : `Feedback: ${prettyFeedback || "Good effort. See suggested fixes."}${correctedPart}${issuesPart}`
           )
             .replace(/\n{3,}/g, "\n\n")
-            .slice(0, 4000);
+            .slice(0, 3000);
 
           await pool.query(
             `INSERT INTO corrections (attempt_id, feedback, fluency_score, grammar_score, vocab_score)
@@ -1069,6 +1135,9 @@ io.on("connection", (socket) => {
              SET feedback=$2, fluency_score=$3, grammar_score=$4, vocab_score=$5`,
             [attempt.id, finalFeedback, corr.fluency, corr.grammar, corr.vocab]
           );
+
+          // 🟢 خزّن الفيدباك كرسالة AI ضمن المحادثة
+          await createAiUtterance(attempt.id, `Feedback:\n${finalFeedback}`);
 
           io.to(socket.id).emit("feedback", {
             questionIdx,
@@ -1099,6 +1168,7 @@ io.on("connection", (socket) => {
     }
   });
 });
+
 // GET /api/sessions/:id/lesson-summary
 app.get("/api/sessions/:id/lesson-summary", async (req, res) => {
   try {
@@ -1146,7 +1216,7 @@ app.get("/api/sessions/:id/lesson-summary", async (req, res) => {
       LIMIT 2;
     `;
     const recapRows = (await pool.query(recapQ, [id])).rows;
-    const recap = `Today, you practiced: ${recapRows.map(r => r.prompt_en).join("; ")}.`;
+    const recap = `Today, you practiced: ${recapRows.map((r) => r.prompt_en).join("; ")}.`;
 
     // Grammar Feedback: نأخذ أول feedback واضح من التصحيحات
     const fbQ = `
@@ -1173,11 +1243,11 @@ app.get("/api/sessions/:id/lesson-summary", async (req, res) => {
         level: meta.rows[0].level,
         day: meta.rows[0].day_number,
       },
-      performance,           // نسبة % لعداد الدائرة
-      recap,                 // نص فقرة Lesson Recap
-      vocab,                 // [{word, meaning}]
+      performance, // نسبة % لعداد الدائرة
+      recap, // نص فقرة Lesson Recap
+      vocab, // [{word, meaning}]
       positivePoints: positive,
-      grammarFeedback,       // جملة/سطرين
+      grammarFeedback, // جملة/سطرين
     });
   } catch (e) {
     console.error("GET /api/sessions/:id/lesson-summary", e);

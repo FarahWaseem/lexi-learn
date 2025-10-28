@@ -1,7 +1,7 @@
 // /src/lib/realtime.js
 import { io } from "socket.io-client";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
 
 /**
  * يوصّل مع السيرفر ويُرجع socket جاهز.
