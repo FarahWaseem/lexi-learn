@@ -1,0 +1,1 @@
+-- Migration: Create user vocab words table

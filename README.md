@@ -1,70 +1,55 @@
-# Getting Started with Create React App
+# LexiLearn
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AI-Powered Language Learning Platform
 
-## Available Scripts
+## Project Structure
 
-In the project directory, you can run:
+This is a monorepo containing:
 
-### `npm start`
+- `backend/` - Express.js server with PostgreSQL database
+- `frontend/` - React + Vite PWA application
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Quick Start
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Backend
 
-### `npm test`
+```bash
+cd backend
+npm install
+cp env.example .env
+# Edit .env with your configuration
+npm run migrate
+npm run seed
+npm run dev
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Frontend
 
-### `npm run build`
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Development
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The backend runs on http://localhost:3000 and the frontend on http://localhost:5173.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+See individual README files in `backend/` and `frontend/` for more details.
 
-### `npm run eject`
+## Features
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- 🎯 Interactive language lessons
+- 🎤 Speech recognition for pronunciation practice
+- 🤖 AI-powered grammar corrections (Google Gemini)
+- 📊 Progress tracking and analytics
+- 📝 Vocabulary notebook
+- 📄 PDF lesson summaries
+- 🔌 Offline support (PWA)
+- 💬 Real-time communication (WebSocket)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Tech Stack
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Frontend:** React 19, Vite, Tailwind CSS, Socket.io-client
+**Backend:** Express.js, PostgreSQL, Socket.io, Clerk Auth
+**AI:** Google Generative AI (Gemini)
