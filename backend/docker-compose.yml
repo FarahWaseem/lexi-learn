@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lexi-learn-db
+    environment:
+      POSTGRES_DB: lexi_learn
+      POSTGRES_USER: lexi_user
+      POSTGRES_PASSWORD: lexi_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - lexi-network
+
+networks:
+  lexi-network:
+
+volumes:
+  postgres_data:

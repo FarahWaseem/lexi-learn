@@ -1,70 +1,265 @@
-# Getting Started with Create React App
+# 🎓 LexiLearn - Language Learning Platform
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, full-stack language learning application built with React, Node.js, and PostgreSQL.
 
-## Available Scripts
+## 🏗️ Project Structure
 
-In the project directory, you can run:
+```
+lexi-learn/
+├── backend/                 # Node.js/Express API
+│   ├── src/                # Source code
+│   ├── database/           # Database schemas and migrations
+│   ├── docker-compose.yml  # Docker configuration
+│   └── Dockerfile         # Backend container
+├── frontend/               # React application
+│   ├── src/               # React source code
+│   └── public/            # Static assets
+├── uploads/               # File uploads
+└── venv/                 # Python environment (for Whisper AI)
+```
 
-### `npm start`
+## 🚀 Quick Start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Option 1: One-Click Start (Recommended)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```bash
+# Start the entire project
+start-project.bat
+```
 
-### `npm test`
+### Option 2: Manual Start
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### 1. Start Backend
+```bash
+cd backend
+start.bat
+```
 
-### `npm run build`
+#### 2. Start Frontend (in new terminal)
+```bash
+start-frontend.bat
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🛠️ Tech Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Backend
+- **Node.js** - Runtime environment
+- **Express.js** - Web framework
+- **PostgreSQL** - Database
+- **Docker** - Containerization
+- **JWT** - Authentication
+- **Joi** - Validation
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Frontend
+- **React** - UI framework
+- **Tailwind CSS** - Styling
+- **React Router** - Navigation
+- **Axios** - HTTP client
 
-### `npm run eject`
+### Database
+- **PostgreSQL** - Primary database
+- **Clean Schema** - Well-structured tables
+- **Migrations** - Version control for database
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 📋 Prerequisites
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **Node.js** (v18 or higher)
+- **Docker Desktop** (for backend)
+- **Git**
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 🔧 Installation
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd lexi-learn
+   ```
 
-## Learn More
+2. **Start the project**
+   ```bash
+   # Windows
+   start-project.bat
+   
+   # Or manually
+   cd backend && start.bat
+   # Then in new terminal
+   start-frontend.bat
+   ```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📊 Application URLs
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:3001
+- **Health Check**: http://localhost:3001/health
+- **Database**: PostgreSQL on localhost:5432
 
-### Code Splitting
+## 🎯 Features
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### ✅ Implemented
+- **User Authentication** (Register/Login)
+- **Vocabulary Management** (Add/Edit/Delete words)
+- **Lesson System** (Daily topics and questions)
+- **Clean Architecture** (Backend)
+- **Responsive Design** (Frontend)
+- **Docker Support** (Easy deployment)
 
-### Analyzing the Bundle Size
+### 🔄 In Progress
+- **Voice Recording** (Audio features)
+- **AI Integration** (Whisper for speech-to-text)
+- **Progress Tracking** (User statistics)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📚 API Documentation
 
-### Making a Progressive Web App
+### Authentication
+- `POST /api/v1/users/register` - Register new user
+- `POST /api/v1/users/login` - Login user
+- `GET /api/v1/users/me` - Get current user
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Vocabulary
+- `GET /api/v1/vocab` - Get user's vocabulary
+- `POST /api/v1/vocab` - Add new word
+- `PUT /api/v1/vocab/:id` - Update word
+- `DELETE /api/v1/vocab/:id` - Delete word
+- `GET /api/v1/vocab/search` - Search words
 
-### Advanced Configuration
+### Lessons
+- `GET /api/v1/lessons` - Get all lessons
+- `POST /api/v1/lessons` - Create lesson
+- `GET /api/v1/lessons/:id` - Get specific lesson
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## 🗄️ Database Schema
 
-### Deployment
+The application uses a clean PostgreSQL schema with the following main tables:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- **users** - User accounts and profiles
+- **daily_topics** - Learning lessons/topics
+- **topic_words** - Words associated with lessons
+- **user_vocab_words** - User's personal vocabulary
+- **sessions** - Learning sessions
+- **attempts** - User attempts at questions
+- **utterances** - Voice/text interactions
+- **corrections** - AI feedback and scoring
 
-### `npm run build` fails to minify
+## 🔐 Authentication
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+All protected endpoints require a Bearer token:
+
+```bash
+Authorization: Bearer <your-jwt-token>
+```
+
+## 🐳 Docker Commands
+
+```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+```
+
+## 🧪 Development
+
+### Backend Development
+```bash
+cd backend
+npm run dev          # Start development server
+npm test            # Run tests
+npm run migrate     # Run database migrations
+```
+
+### Frontend Development
+```bash
+cd frontend
+npm start           # Start React development server
+npm test           # Run tests
+npm run build      # Build for production
+```
+
+## 📝 Environment Variables
+
+### Backend (.env)
+```env
+DATABASE_URL=postgresql://lexi_user:lexi_password@localhost:5432/lexi_learn
+JWT_SECRET=your-super-secret-jwt-key-here
+PORT=3001
+NODE_ENV=development
+```
+
+## 🚀 Deployment
+
+### Production Setup
+1. Set `NODE_ENV=production`
+2. Use production PostgreSQL database
+3. Set secure JWT secrets
+4. Configure CORS origins
+5. Use reverse proxy (nginx) for SSL
+
+### Docker Production
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 📈 Performance
+
+- **Database indexing** for fast queries
+- **Rate limiting** to prevent abuse
+- **Connection pooling** for efficiency
+- **Compression** for response optimization
+
+## 🔒 Security
+
+- **Helmet.js** for security headers
+- **Input validation** and sanitization
+- **SQL injection** prevention
+- **Password hashing** with bcrypt
+- **JWT token** expiration
+- **CORS** configuration
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+1. **Docker not running**
+   - Start Docker Desktop
+   - Wait for it to fully start
+
+2. **Port conflicts**
+   - Check if ports 3000, 3001, 5432 are free
+   - Stop conflicting services
+
+3. **Database connection issues**
+   - Ensure PostgreSQL is running
+   - Check connection string in .env
+
+4. **Frontend not connecting to backend**
+   - Verify backend is running on port 3001
+   - Check CORS configuration
+
+## 📞 Support
+
+For issues and questions:
+- Check the troubleshooting section
+- Review the API documentation
+- Contact the development team
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🎉 Getting Started
+
+1. **Clone the repository**
+2. **Run `start-project.bat`**
+3. **Open http://localhost:3000**
+4. **Start learning!**
+
+---
+
+**Happy Learning! 🎓✨**
