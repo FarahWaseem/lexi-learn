@@ -15,7 +15,7 @@ import {
   loadQALog,        // ✅ لنقرأ الـQ&A وقت التصدير فقط
 } from "../offline/db";
 
-const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:3000";
+const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:3001";
 
 async function fetchWithTimeout(input, init = {}, ms = 20000) {
   const ctrl = new AbortController();

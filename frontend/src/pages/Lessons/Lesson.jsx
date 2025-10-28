@@ -15,7 +15,7 @@ import "./Lesson.css";
 import iconSearch from "../../assets/icons/search-normal.svg";
 import iconSort from "../../assets/icons/Sort.svg";
 
-const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:3000";
+const API_BASE = import.meta?.env?.VITE_API_BASE || "http://localhost:3001";
 const TOPICS_CACHE_KEY = "topics_cache_v1";
 
 function Lessons() {

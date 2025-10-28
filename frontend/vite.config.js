@@ -17,17 +17,17 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//], // ما يردّ على API calls
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/localhost:3000\/api\/sessions\/[\w-]+\/lesson-summary/i,
+            urlPattern: /^https?:\/\/localhost:3001\/api\/sessions\/[\w-]+\/lesson-summary/i,
             handler: "StaleWhileRevalidate",
             options: { cacheName: "api-lesson-summary" },
           },
           {
-            urlPattern: /^https?:\/\/localhost:3000\/api\/sessions\/[\w-]+\/export\.pdf/i,
+            urlPattern: /^https?:\/\/localhost:3001\/api\/sessions\/[\w-]+\/export\.pdf/i,
             handler: "CacheFirst",
             options: { cacheName: "pdf-lesson-summary" },
           },
           {
-            urlPattern: /^https?:\/\/localhost:3000\/api\/my\/topics/i,
+            urlPattern: /^https?:\/\/localhost:3001\/api\/my\/topics/i,
             handler: "StaleWhileRevalidate",
             options: { cacheName: "api-topics" },
           },

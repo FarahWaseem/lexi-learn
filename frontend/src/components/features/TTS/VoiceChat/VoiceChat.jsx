@@ -23,7 +23,7 @@ const VoiceChat = ({ aiService, ttsService, selectedTTS, isOnline, handleSpeak }
 
   const checkServerStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/day/1/question/1');
+      const response = await fetch('http://localhost:3001/api/day/1/question/1');
       if (response.ok) {
         setServerStatus('online');
       } else {

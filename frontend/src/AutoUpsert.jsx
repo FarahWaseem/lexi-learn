@@ -14,7 +14,7 @@ export default function AutoUpsert() {
                 const token = await getToken();
                 if (!token) return;
 
-                const url = "http://localhost:3000/api/me";
+                const url = "http://localhost:3001/api/me";
                 console.log(
                     "🔸 calling",
                     url,

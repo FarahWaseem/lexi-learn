@@ -2,7 +2,7 @@
 require('dotenv').config();
 
 module.exports = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 3001,
   databaseUrl: process.env.DATABASE_URL,
   clerkSecretKey: process.env.CLERK_SECRET_KEY,
   clerkPublishableKey: process.env.CLERK_PUBLISHABLE_KEY,

@@ -33,7 +33,7 @@ npm run dev
 
 ## Development
 
-The backend runs on http://localhost:3000 and the frontend on http://localhost:5173.
+The backend runs on http://localhost:3001 and the frontend on http://localhost:5173.
 
 See individual README files in `backend/` and `frontend/` for more details.
 

@@ -26,7 +26,8 @@
     "node-fetch": "^2.7.0",
     "jose": "^6.1.0",
     "svix": "^1.76.1",
-    "abort-controller": "^3.0.0"
+    "abort-controller": "^3.0.0",
+    "fs-extra": "^11.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

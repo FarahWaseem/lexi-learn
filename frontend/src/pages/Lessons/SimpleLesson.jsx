@@ -10,7 +10,7 @@ import { markCompleted } from "../../utils/progress";
 // ✅ تخزين أوفلاين (مطابق لـ /src/offline/db.js)
 import { saveSummaryJson, saveSummaryPdf, saveQALog } from "../../offline/db";
 
-const API_BASE = import.meta.env?.VITE_API_BASE || "http://localhost:3000";
+const API_BASE = import.meta.env?.VITE_API_BASE || "http://localhost:3001";
 
 export default function SimpleLesson() {
     const { getToken } = useAuth();

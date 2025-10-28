@@ -13,7 +13,7 @@ import iconArrowDown from "../../assets/icons/arrow-down.svg";
 import iconSetting from "../../assets/icons/setting-2.svg";
 import iconLogout from "../../assets/icons/Logout icon.svg";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 function Header() {
   const location = useLocation();
