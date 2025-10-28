@@ -10,7 +10,8 @@ const seedDatabase = async () => {
     await connectDB();
     
     // Read and execute seed file
-    const seedFilePath = path.join(__dirname, 'seed-lessons.sql');
+    const seedFilePath = path.join(__dirname, '../../database/seed-lessons.sql');
+    console.log(`🌾 Seeding from file: ${seedFilePath}`);
     const seedSQL = fs.readFileSync(seedFilePath, 'utf8');
     
     // Split by semicolon and execute each statement

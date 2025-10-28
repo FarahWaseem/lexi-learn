@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS user_vocab_words (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   lesson VARCHAR(255) NOT NULL,
   word VARCHAR(100) NOT NULL,
   translation VARCHAR(255) NOT NULL,
