@@ -276,7 +276,7 @@ function attachRealtime(server) {
               : `Feedback: ${prettyFeedback || 'Good effort. See suggested fixes.'}${correctedPart}${issuesPart}`
             )
               .replace(/\n{3,}/g, '\n\n')
-              .slice(0, 3001);
+              .slice(0, 3000);
 
             await pool.query(
               `INSERT INTO corrections (attempt_id, feedback, fluency_score, grammar_score, vocab_score)
