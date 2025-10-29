@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import Sidebar from "../../components/sidebar/Sidebar";
 import Toolbar from "../../components/reusable/Toolbar/Toolbar";
 import LessonCard from "../../components/reusable/lessonCard/LessonCard";
 import Pagination from "../../components/reusable/pagination/pagination";
@@ -12,7 +11,7 @@ export default function Lessons() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [showFilter, setShowFilter] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState([]); 
+  const [selectedLesson, setSelectedLesson] = useState([]);
   const [order, setOrder] = useState("asc");
 
   const [tempSelectedLesson, setTempSelectedLesson] = useState([]);
@@ -36,38 +35,30 @@ export default function Lessons() {
     if (tempSelectedLesson.length > 0) {
       result = result.filter((l) => tempSelectedLesson.includes(l.title));
     }
-    result.sort((a, b) =>
-      tempOrder === "desc" ? b.id - a.id : a.id - b.id
-    );
+    result.sort((a, b) => (tempOrder === "desc" ? b.id - a.id : a.id - b.id));
     return result;
   }, [lessons, search, tempSelectedLesson, tempOrder]);
 
   const openFilter = () => {
-    console.log("🟦 [Lessons] openFilter()");
     setTempSelectedLesson([...selectedLesson]);
     setTempOrder(order);
     setShowFilter(true);
   };
 
   const applyFilter = () => {
-    console.log("🟩 [Lessons] applyFilter()", {
-      tempSelectedLesson,
-      tempOrder,
-    });
     setSelectedLesson([...tempSelectedLesson]);
     setOrder(tempOrder);
     setShowFilter(false);
+    setCurrentPage(1);
   };
 
   const cancelFilter = () => {
-    console.log("🟥 [Lessons] cancelFilter() → رجوع للقيم القديمة وإغلاق");
     setTempSelectedLesson([...selectedLesson]);
     setTempOrder(order);
     setShowFilter(false);
   };
 
   const clearFilter = () => {
-    console.log("🧹 [Lessons] clearFilter() → تفريغ المؤقت");
     setTempSelectedLesson([]);
   };
 
@@ -83,7 +74,6 @@ export default function Lessons() {
               ? prev.filter((item) => item !== l.title)
               : [...prev, l.title]
           );
-          console.log("🏷️ [Lessons] toggle lesson chip:", l.title);
         },
       })),
     },
@@ -94,28 +84,30 @@ export default function Lessons() {
           label: "Ascending A–Z",
           icon: "asc",
           active: tempOrder === "asc",
-          onClick: () => {
-            console.log("🔤 [Lessons] order → asc");
-            setTempOrder("asc");
-          },
+          onClick: () => setTempOrder("asc"),
         },
         {
           label: "Descending Z–A",
           icon: "desc",
           active: tempOrder === "desc",
-          onClick: () => {
-            console.log("🔤 [Lessons] order → desc");
-            setTempOrder("desc");
-          },
+          onClick: () => setTempOrder("desc"),
         },
       ],
     },
   ];
 
+  const lessonsPerPage = 6;
+  const totalPages = Math.ceil(filteredLessons.length / lessonsPerPage);
+  const startIndex = (currentPage - 1) * lessonsPerPage;
+  const currentLessons = filteredLessons.slice(
+    startIndex,
+    startIndex + lessonsPerPage
+  );
+
   return (
     <div className="lessons-page">
-      <Sidebar />
       <div className="lessons-content">
+        <div className="lessons-inner">
         <Toolbar
           searchValue={search}
           onSearchChange={setSearch}
@@ -131,10 +123,10 @@ export default function Lessons() {
             onDone={applyFilter}
           />
         )}
-
+        <div class="lessons-grid-wrapper">
         <div className="lessons-grid">
-          {filteredLessons.length > 0 ? (
-            filteredLessons.map((lesson) => (
+          {currentLessons.length > 0 ? (
+            currentLessons.map((lesson) => (
               <LessonCard
                 key={lesson.id}
                 lesson={lesson}
@@ -145,12 +137,16 @@ export default function Lessons() {
             <p className="no-lessons">⚠️ No lessons found.</p>
           )}
         </div>
+        </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={setCurrentPage}
-        />
+        <div className="pagination-footer">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+        </div>
       </div>
     </div>
   );

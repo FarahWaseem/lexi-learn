@@ -36,7 +36,7 @@ export default function Sidebar() {
             to="/lessons"
             className={({ isActive }) => (isActive ? "active-link" : "")}
           >
-            <img src={LessonIcon} className="icon" /> Lesson
+            <img src={LessonIcon} className="icon" /> Lessons
           </NavLink>
 
           <NavLink
