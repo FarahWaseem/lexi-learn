@@ -1,75 +1,90 @@
-// src/App.jsx
-import React, { useEffect, useRef } from "react";
+// frontend/src/App.jsx
+import React, { useEffect, useRef, useState } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/clerk-react";
 
 import Sidebar from "./components/sidebar/Sidebar";
+import Header from "./components/header/Header";
+
+// من شغل الفريق
+import Dashboard from "./pages/Dashboard";
+// ❌ حذف Lessons.jsx
+import VocabsNotebook from "./pages/VocabsNotebook/VocabsNotebook";
+
+// من شغلك
 import Lesson from "./pages/Lessons/Lesson";
 import SimpleLesson from "./pages/Lessons/SimpleLesson";
-import Dashboard from "./pages/Dashboard";
-import VocabsNotebook from "./pages/VocabsNotebook";
-import Header from "./components/header/Header";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import LessonSammary from "./pages/LessonSammary/lessonSammary";
 import Summary from "./pages/Summary";
 
-import {
-  SignedIn,
-  SignedOut,
-  RedirectToSignIn,
-  useAuth,
-} from "@clerk/clerk-react";
-
+import NoInternet from "./components/reusable/NoInternet/NoInternet";
+import { useTheme } from "./context/ThemeContext";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 function App() {
-  console.log("✅ App component rendered");
-
-  // 👇 الجديد: نحدد إذا إحنا على صفحة السمري
+  const { darkMode } = useTheme();
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
   const onSummary = location.pathname.startsWith("/summary/");
 
+  // مراقبة الاتصال
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const handleRetry = () => {
+    if (navigator.onLine) setIsOnline(true);
+    else window.location.reload();
+  };
+
+  if (!isOnline) return <NoInternet onRetry={handleRetry} />;
+
   return (
-    <div className="app-container">
-      {/* يظهر المحتوى الكامل للتطبيق فقط عند تسجيل الدخول */}
+    <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
       <SignedIn>
-        {/* 👇 لا تشغّل AutoUpsert على صفحة السمري لتفادي السباق */}
         {!onSummary && <AutoUpsert />}
         <Sidebar />
         <div className="content-container">
           <Header />
           <main className="main-content">
             <Routes>
+              {/* من شغل الفريق */}
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* ✅ لما تضغطي Lesson من السايدبار، يفتح Lesson.jsx */}
+              <Route path="/lessons" element={<Lesson />} />
+              
+              <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
 
-              {/* الدروس */}
+              {/* صفحاتك الخاصة */}
               <Route path="/lesson" element={<Lesson />} />
               <Route path="/lesson1" element={<SimpleLesson />} />
-
-              {/* الملخّص */}
+              <Route path="/lessonSammary" element={<LessonSammary />} />
               <Route path="/summary/:id" element={<Summary />} />
 
-              {/* أي مسار غير معروف داخل SignedIn يروح للداشبورد */}
+              {/* أي مسار غير معروف */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
       </SignedIn>
 
-      {/* وضع غير مسجّل الدخول: صفحات Auth + تحويل تلقائي */}
       <SignedOut>
         <Routes>
-          {/* صفحاتك المخصّصة */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-
-          {/* مسارات SSO الممكنة من Clerk لتفادي التحذيرات */}
+          <Route path="/login" element={<RedirectToSignIn />} />
+          <Route path="/signup" element={<RedirectToSignIn />} />
           <Route path="/login/sso-callback" element={<div />} />
           <Route path="/sso-callback" element={<div />} />
-
-          {/* أي شيء آخر: وجّهي المستخدم لنافذة تسجيل الدخول */}
           <Route path="*" element={<RedirectToSignIn />} />
         </Routes>
       </SignedOut>
@@ -77,11 +92,11 @@ function App() {
   );
 }
 
-/** 🔁 يستدعي /api/me بعد تسجيل الدخول لعمل UPSERT للمستخدم – مرّة واحدة فقط مع إعادة محاولات ذكية */
+/** AutoUpsert — شغلك */
 function AutoUpsert() {
   const { isSignedIn, getToken } = useAuth();
-  const calledRef = useRef(false);   // يمنع التكرار المنطقي
-  const abortRef = useRef(false);    // يلغي عند unmount
+  const calledRef = useRef(false);
+  const abortRef = useRef(false);
 
   useEffect(() => {
     abortRef.current = false;
@@ -97,69 +112,46 @@ function AutoUpsert() {
     (async () => {
       const maxAttempts = 3;
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
       let attempt = 0;
       let lastError = null;
 
       while (attempt < maxAttempts && !abortRef.current) {
         attempt += 1;
         try {
-          // المحاولة الأولى: توكن عادي. المحاولات التالية: skipCache
           const token = await getToken(
             attempt === 1 ? undefined : { skipCache: true }
           );
           if (!token) throw new Error("Missing Clerk token");
 
-          const url = `${API_BASE}/api/me`;
-          console.log(
-            `🔸 [AutoUpsert] attempt ${attempt}/${maxAttempts} →`,
-            url,
-            "token:",
-            token.slice(0, 12) + "…"
-          );
-
-          const res = await fetch(url, {
-            method: "GET",
+          const res = await fetch(`${API_BASE}/api/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          // حاول قراءة JSON، ولو فشل إرجع النص
-          let payload;
           const text = await res.text();
+          let payload;
           try {
             payload = JSON.parse(text);
           } catch {
             payload = text;
           }
 
-          if (!res.ok) {
-            const msg =
-              typeof payload === "object"
-                ? payload?.error || JSON.stringify(payload)
-                : String(payload || "");
+          if (!res.ok)
             throw new Error(
-              `HTTP ${res.status} ${res.statusText || ""} — ${msg}`.trim()
+              `HTTP ${res.status} ${res.statusText} — ${payload?.error || ""}`.trim()
             );
-          }
 
           console.log("✅ [AutoUpsert] /api/me ok:", payload);
-          return; // نجاح — لا نعيد المحاولة
+          return;
         } catch (e) {
           lastError = e;
-          console.warn(`⚠️ [AutoUpsert] attempt ${attempt} failed:`, e?.message);
-
-          // لو آخر محاولة، اخرج
+          console.warn(`⚠️ [AutoUpsert] attempt ${attempt} failed:`, e.message);
           if (attempt >= maxAttempts) break;
-
-          // backoff: 200ms, 600ms
-          const backoff = attempt === 1 ? 200 : 600;
-          await sleep(backoff);
+          await sleep(attempt === 1 ? 200 : 600);
         }
       }
 
-      if (!abortRef.current && lastError) {
+      if (!abortRef.current && lastError)
         console.error("❌ [AutoUpsert] giving up:", lastError.message);
-      }
     })();
   }, [isSignedIn, getToken]);
 

@@ -1,40 +1,63 @@
-// Header.jsx — يعرض الاسم الأول فقط من قاعدة البيانات
+// Header.jsx — unified version (Clerk + Settings + ProfileDropdown + assets imports)
+
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { useClerk, useAuth, useUser } from "@clerk/clerk-react";
-import "./Header.css";
 
-// ✅ استيراد الصور والأيقونات كـ modules ليشتغلوا في build + PWA
+// ✅ Clerk (تسجيل خروج + التوكن)
+import { useClerk, useAuth, useUser as useClerkUser } from "@clerk/clerk-react";
+
+// ✅ لو بدك تحتفظي بكونتكستك المحلي للمستخدم (avatar مثلاً)
+import { useUser as useLocalUser } from "../../context/UserContext";
+
+// مكوناتك
+import Settings from "./settings/Settings";
+import ProfileDropdown from "./ProfileDropdown/ProfileDropdown";
+
+// CSS
+import "./header.css";
+
+// ✅ استيراد صور/أيقونات كـ modules (يشتغل في build + PWA)
 import imgZaytoona from "../../assets/images/zaytoonaReadingBook.png";
 import imgLessonPage from "../../assets/images/lessonpage.png";
 import iconNotif from "../../assets/icons/notification.svg";
 import iconUserCircle from "../../assets/icons/User Circle.svg";
 import iconArrowDown from "../../assets/icons/arrow-down.svg";
-import iconSetting from "../../assets/icons/setting-2.svg";
-import iconLogout from "../../assets/icons/Logout icon.svg";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 function Header() {
   const location = useLocation();
+
+  // لغات + فتح القوائم
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Clerk
   const { signOut } = useClerk();
   const { getToken } = useAuth();
-  const { user: clerkUser } = useUser();
+  const { user: clerkUser } = useClerkUser();
 
-  const [firstName, setFirstName] = useState(clerkUser?.firstName || "User");
+  // Context المحلي (لأفاتارك المخزن محلياً)
+  const { user: localUser } = useLocalUser() || { user: {} };
 
-  // 🔹 جلب الاسم من قاعدة البيانات (العمود first_name فقط)
+  // الاسم المعروض (نجيب من DB أولاً، بعدين Clerk، بعدين Contextك)
+  const [firstName, setFirstName] = useState(
+    clerkUser?.firstName || localUser?.firstName || "User"
+  );
+
+  // 🔹 جلب الاسم من قاعدة البيانات (/api/me) مع تخزين محلي كـ fallback للأوفلاين
   useEffect(() => {
     let abort = false;
+
     (async () => {
       try {
-        // ✅ لو مافي إنترنت، استخدم الاسم من التخزين المحلي
         if (!navigator.onLine) {
           const cached = localStorage.getItem("me");
-          if (cached && !abort)
-            setFirstName(JSON.parse(cached)?.first_name || firstName);
+          if (cached && !abort) {
+            const cachedUser = JSON.parse(cached);
+            setFirstName(cachedUser?.first_name || firstName);
+          }
           return;
         }
 
@@ -44,8 +67,8 @@ function Header() {
         const res = await fetch(`${API_BASE}/api/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) throw new Error("Failed to fetch /api/me");
 
-        if (!res.ok) return;
         const data = await res.json();
         if (!abort && data?.ok && data?.user?.first_name) {
           setFirstName(data.user.first_name);
@@ -54,8 +77,10 @@ function Header() {
           } catch {}
         }
       } catch {
-        if (!abort && clerkUser?.firstName) {
-          setFirstName(clerkUser.firstName);
+        if (!abort) {
+          setFirstName(
+            clerkUser?.firstName || localUser?.firstName || "User"
+          );
         }
       }
     })();
@@ -63,9 +88,10 @@ function Header() {
     return () => {
       abort = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getToken, clerkUser?.firstName]);
 
-  // تعريف معلومات الصفحة
+  // 👇 تعريف معلومات الصفحات (حافظنا على صفحاتك)
   const pageInfo = {
     "/dashboard": {
       title: "Dashboard",
@@ -82,12 +108,28 @@ function Header() {
       subtitle: "Your details",
       img: imgLessonPage,
     },
+    "/lessonSammary": {
+      title: "Lesson Summary",
+      subtitle: "Your details",
+      img: imgLessonPage,
+    },
   };
 
   const current = pageInfo[location.pathname] || {
     title: "Welcome",
     subtitle: "Choose a page",
     img: imgZaytoona,
+  };
+
+  const handleOpenSettings = () => {
+    setIsProfileOpen(false);
+    setIsSettingsOpen(true);
+    document.body.style.overflow = "hidden";
+  };
+
+  const handleCloseSettings = () => {
+    setIsSettingsOpen(false);
+    document.body.style.overflow = "auto";
   };
 
   const handleLogout = async () => {
@@ -99,79 +141,67 @@ function Header() {
     }
   };
 
+  // أفضل مصدر للأفاتار:
+  const avatarSrc =
+    localUser?.avatar || clerkUser?.imageUrl || iconUserCircle;
+
   return (
-    <header className="header">
-      {/* يسار */}
-      <div className="header-left">
-        <img src={current.img} alt="page-icon" className="page-icon" />
-        <div>
-          <h2 className="page-title">{current.title}</h2>
-          <p className="page-subtitle">{current.subtitle}</p>
-        </div>
-      </div>
-
-      {/* يمين */}
-      <div className="header-right">
-        {/* زر اللغة */}
-        <button
-          onClick={() => setLang(lang === "EN" ? "AR" : "EN")}
-          className="lang-btn"
-        >
-          {lang}
-        </button>
-
-        {/* الإشعارات */}
-        <div className="notification-wrapper">
-          <img
-            src={iconNotif}
-            alt="notifications"
-            className="notification-icon"
-          />
-          <span className="notification-badge">1</span>
+    <>
+      <header className="header">
+        {/* يسار: عنوان/صورة الصفحة */}
+        <div className="header-left">
+          <img src={current.img} alt="page-icon" className="page-icon" />
+          <div className="page-texts">
+            <h2 className="page-title">{current.title}</h2>
+            <p className="page-subtitle">{current.subtitle}</p>
+          </div>
         </div>
 
-        {/* البروفايل */}
-        <div className="profile-wrapper">
+        {/* يمين: لغة + إشعارات + بروفايل */}
+        <div className="header-right">
+          {/* زر اللغة */}
           <button
-            onClick={() => setIsProfileOpen(!isProfileOpen)}
-            className="profile-btn"
+            onClick={() => setLang(lang === "EN" ? "AR" : "EN")}
+            className="lang-btn"
           >
-            <img src={iconUserCircle} alt="profile" className="profile-img" />
-            {/* ✅ الاسم الأول فقط من قاعدة البيانات */}
-            <span className="profile-name">{firstName}</span>
-            <img src={iconArrowDown} alt="arrow" className="arrow-down" />
+            {lang}
           </button>
 
-          {isProfileOpen && (
-            <div className="profile-dropdown">
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) => (isActive ? "ho" : "")}
-                onClick={() => setIsProfileOpen(false)}
-              >
-                <div className="profile-setting">
-                  <img
-                    src={iconSetting}
-                    alt="Setting"
-                    className="setting-img"
-                  />
-                  <h5>Setting</h5>
-                </div>
-              </NavLink>
+          {/* الإشعارات */}
+          <div className="notification-wrapper">
+            <img
+              src={iconNotif}
+              alt="notifications"
+              className="notification-icon"
+            />
+            <span className="notification-badge">1</span>
+          </div>
 
-              <button
-                type="button"
-                className="profile-logout"
-                onClick={handleLogout}
-              >
-                <img src={iconLogout} alt="Logout" className="setting-img" />
-                <h5>Logout</h5>
-              </button>
-            </div>
-          )}
+          {/* البروفايل */}
+          <div className="profile-wrapper">
+            <button
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+              className="profile-btn"
+            >
+              <img src={avatarSrc} alt="profile" className="profile-img" />
+              {/* الاسم الأول فقط */}
+              <span className="profile-name">{firstName}</span>
+              <img src={iconArrowDown} alt="arrow" className="arrow-down" />
+            </button>
+
+            {isProfileOpen && (
+              <ProfileDropdown
+                onSettingsClick={handleOpenSettings}
+                onLogoutClick={handleLogout}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* نافذة الإعدادات */}
+      <Settings isOpen={isSettingsOpen} onClose={handleCloseSettings} />
+    </>
   );
 }
 
