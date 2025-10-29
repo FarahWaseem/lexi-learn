@@ -32,7 +32,7 @@ function createApp() {
   const sessionsRouter = require('./routes/sessions');
   const utterancesRouter = require('./routes/utterances');
 
-  app.use('/api/topics', topicsRouter);
+  app.use('/api', topicsRouter);
   app.use('/api', usersRouter);
   app.use('/api/sessions', sessionsRouter);
   app.use('/api', utterancesRouter);

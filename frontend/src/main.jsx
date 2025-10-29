@@ -13,9 +13,31 @@ import { ThemeProvider } from "./context/ThemeContext";
 
 // 🔹 تفعيل الـ PWA (تطبيق الويب التقدّمي)
 import { registerSW } from "virtual:pwa-register";
-registerSW({
+
+const updateSW = registerSW({
   immediate: true,
-  onRegistered: (r) => r && setTimeout(() => r.update(), 1000),
+  onRegistered(registration) {
+    if (registration) {
+      console.log("✅ Service Worker registered successfully");
+      // Check for updates every hour
+      setInterval(() => {
+        registration.update();
+      }, 60 * 60 * 1000);
+    }
+  },
+  onRegisterError(error) {
+    console.error("❌ Service Worker registration failed:", error);
+  },
+  onNeedRefresh() {
+    console.log("🔄 New content available, please refresh");
+    // Auto-update after 3 seconds
+    setTimeout(() => {
+      updateSW(true);
+    }, 3000);
+  },
+  onOfflineReady() {
+    console.log("✅ App ready to work offline");
+  },
 });
 
 // 🔹 مفتاح Clerk من env
