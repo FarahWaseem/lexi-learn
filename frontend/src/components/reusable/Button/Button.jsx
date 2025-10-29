@@ -3,7 +3,7 @@ import "./Button.css";
 
 function Button({ children, variant = "primary", onClick }) {
   return (
-    <button className={`${styles.button} ${styles[variant]}`} onClick={onClick}>
+    <button className={`button ${variant}`} onClick={onClick}>
       {children}
     </button>
   );

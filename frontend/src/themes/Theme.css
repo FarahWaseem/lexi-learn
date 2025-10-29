@@ -15,6 +15,7 @@
   --color-stroke: #E4E4E4;
   --color-disabled-icon: #B3B3B3;
   --color-available-icon: #F3E8E8;
+  --color-card-hover: #fafafa;
 
   /* Text */
   --text-primary: rgba(0,0,0,0.87);
@@ -62,4 +63,21 @@
 
   /* Shadows */
   --shadow-card: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.dark-mode {
+  --color-background: #121212;
+  --color-card: #1E1E1E;
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-tertiary: rgba(255, 255, 255, 0.38);
+  --text-on-primary: #FFFFFF;
+  --color-stroke: #333333;
+  --color-card-hover: #2a2a2a;
+  --color-disabled-icon: #777777;
+  --color-green: #00C26D;
+  --color-green-shade: #00C26D1A;
+  --color-red: #FF4D4D;
+  --color-red-shade: #FF4D4D1A;
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.4);
 }

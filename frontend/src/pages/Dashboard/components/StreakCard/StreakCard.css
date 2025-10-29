@@ -1,0 +1,54 @@
+.streak-card {
+  width: 100%;
+  background: var(--color-card);
+  border-radius: var(--radius-s);
+  padding: var(--spacing-xs);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  box-shadow: var(--shadow-card);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.streak-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.streak-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.streak-header h4 {
+  color: var(--text-primary);
+  font-size: var(--font-4);
+  font-family: var(--font-family);
+  font-weight: var(--font-bold);
+  line-height: 36px;
+  margin: 0;
+}
+
+.streak-days {
+  align-self: stretch;
+  color: var(--color-green);
+  font-size: var(--font-2);
+  font-family: var(--font-family);
+  font-weight: var(--font-bold);
+  line-height: 51px;
+  margin: 0;
+}
+
+.streak-desc {
+  align-self: stretch;
+  color: var(--text-secondary);
+  font-size: var(--font-6);
+  font-family: var(--font-family);
+  font-weight: var(--font-regular);
+  line-height: 24px;
+  margin: 0;
+}

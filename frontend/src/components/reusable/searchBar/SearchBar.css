@@ -1,7 +1,7 @@
 .search-container {
   width: 440px!important;
   height: 48px;
-  background: var(--color-card);
+  background-color: var(--color-card);
   border-radius: 12px;
   display: flex;
   align-items: center;
