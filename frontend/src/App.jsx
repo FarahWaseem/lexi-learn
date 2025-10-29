@@ -15,30 +15,30 @@ function App() {
 
   const { darkMode } = useTheme();
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+  // useEffect(() => {
+  //   const handleOnline = () => setIsOnline(true);
+  //   const handleOffline = () => setIsOnline(false);
 
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
+  //   window.addEventListener("online", handleOnline);
+  //   window.addEventListener("offline", handleOffline);
 
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener("online", handleOnline);
+  //     window.removeEventListener("offline", handleOffline);
+  //   };
+  // }, []);
 
-  const handleRetry = () => {
-    if (navigator.onLine) {
-      setIsOnline(true);
-    } else {
-      window.location.reload();
-    }
-  };
+  // const handleRetry = () => {
+  //   if (navigator.onLine) {
+  //     setIsOnline(true);
+  //   } else {
+  //     window.location.reload();
+  //   }
+  // };
 
-  if (!isOnline) {
-    return <NoInternet onRetry={handleRetry} />;
-  }
+  // if (!isOnline) {
+  //   return <NoInternet onRetry={handleRetry} />;
+  // }
 
   return (
     <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
