@@ -1,35 +1,91 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Toolbar from "../../components/reusable/Toolbar/Toolbar";
 import LessonCard from "../../components/reusable/lessonCard/LessonCard";
 import Pagination from "../../components/reusable/pagination/pagination";
 import Filter from "../../components/reusable/filter/Filter";
-import { sampleLessons } from "../../data/lessons";
+import LoadingSpinner from "../../components/common/LoadingSpinner/LoadingSpinner.jsx";
 import "./Lessons.css";
 
 export default function Lessons() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [showFilter, setShowFilter] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState([]); 
   const [order, setOrder] = useState("asc");
-
   const [tempSelectedLesson, setTempSelectedLesson] = useState([]);
   const [tempOrder, setTempOrder] = useState("asc");
 
-  const lessons = useMemo(
-    () =>
-      Object.values(sampleLessons).map((lesson, idx) => ({
-        id: idx + 1,
-        title: lesson.topic,
-        description: lesson.iceBreaker.description,
-        status: idx % 2 === 0 ? "completed" : "new",
-      })),
-    []
-  );
+  // API state
+  const [lessons, setLessons] = useState([]);
+  const [completedTopics, setCompletedTopics] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchLessons();
+  }, []);
+
+  const fetchLessons = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem('clerk_token') || '';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+      // Fetch all topics
+      const topicsResponse = await fetch(`${apiUrl}/api/topics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!topicsResponse.ok) {
+        throw new Error('Failed to fetch topics');
+      }
+
+      const topicsData = await topicsResponse.json();
+      console.log('📚 Topics:', topicsData);
+
+      // Fetch completed topics
+      try {
+        const completedResponse = await fetch(`${apiUrl}/api/topics/user/completed`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (completedResponse.ok) {
+          const completedData = await completedResponse.json();
+          const completedIds = completedData.topics?.map(t => t.topic_id) || [];
+          setCompletedTopics(completedIds);
+        }
+      } catch (err) {
+        console.warn('Could not fetch completed topics:', err);
+      }
+
+      // Format lessons data
+      const formattedLessons = (topicsData.topics || []).map(topic => ({
+        id: topic.day_number,
+        topicId: topic.topic_id,
+        title: topic.topic_name,
+        description: topic.description || '',
+        status: completedTopics.includes(topic.topic_id) ? 'completed' : 'new'
+      }));
+
+      setLessons(formattedLessons);
+    } catch (err) {
+      console.error('❌ Error fetching lessons:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredLessons = useMemo(() => {
     let result = lessons.filter((l) =>
@@ -76,10 +132,10 @@ export default function Lessons() {
   const handleLessonAction = (lesson) => {
     console.log("▶️ Clicked:", lesson);
     
-    if (lesson.status === "completed") {
-      // View summary - navigate to summary page
-      // Note: You'll need the actual session ID from backend
-      navigate(`/lessonSammary?id=${lesson.id}`);
+    if (lesson.status === 'completed') {
+      // View summary - need to get the actual session ID
+      // For now, navigate to the lesson page
+      navigate(`/lesson-session?day=${lesson.id}`);
     } else {
       // Start new lesson
       navigate(`/lesson-session?day=${lesson.id}`);
@@ -127,6 +183,34 @@ export default function Lessons() {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="lessons-page">
+        <Sidebar />
+        <div className="lessons-content">
+          <LoadingSpinner />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="lessons-page">
+        <Sidebar />
+        <div className="lessons-content">
+          <div className="error-message">
+            <h3>⚠️ Error Loading Lessons</h3>
+            <p>{error}</p>
+            <button onClick={fetchLessons} className="retry-button">
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="lessons-page">
       <Sidebar />
@@ -161,12 +245,13 @@ export default function Lessons() {
           )}
         </div>
 
-        <Pagination
+        {/* <Pagination
           currentPage={currentPage}
-          totalPages={10}
+          totalPages={Math.ceil(filteredLessons.length / 12)}
           onPageChange={setCurrentPage}
-        />
+        /> */}
       </div>
     </div>
   );
 }
+

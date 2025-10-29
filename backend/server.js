@@ -1,7 +1,7 @@
 require('dotenv').config();
-const app = require('./src/app');
+const { server } = require('./src/app');
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+
+// Don't call listen here - app.js already handles it
+// This file is now just for backwards compatibility
