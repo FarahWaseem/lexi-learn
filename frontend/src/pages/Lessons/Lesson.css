@@ -103,7 +103,7 @@
   height: 20px;
   object-fit: contain;
 }
-<<<<<<<< HEAD:frontend/src/pages/Lessons/Lesson.css
+
 /* داخل Lesson.css أو global */
 .btn { border-radius: 999px; padding: 14px 22px; font-weight: 600; }
 .btn-green { background:#167c3a; color:#fff; }
@@ -113,6 +113,3 @@
 .lesson-card__head { color:#666; margin-bottom:4px; }
 .lesson-card__title { margin:0 0 8px; }
 .lesson-card__desc { color:#666; margin:0 0 16px; }
-========
-
->>>>>>>> origin/master:frontend/src/pages/Lessons/Lessons.css

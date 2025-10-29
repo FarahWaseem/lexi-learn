@@ -1,16 +1,26 @@
+# backend/docker-compose.yml
 version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
+    container_name: lexi-learn-db
     environment:
-      POSTGRES_USER: lexil
-      POSTGRES_PASSWORD: secret123
-      POSTGRES_DB: lexilearn
+      POSTGRES_DB: lexilearn         # يطابق .env
+      POSTGRES_USER: lexil           # يطابق .env
+      POSTGRES_PASSWORD: secret123   # يطابق .env
     ports:
-      - "5433:5432"
+      - "5433:5432"                  # يطابق .env (5433 على جهازك → 5432 داخل الحاوية)
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # سكربتات التهيئة الأولية (تتنفّذ مرة عند إنشـاء الداتا فولدر لأول مرة)
+      - ./database/init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./database/seed-lessons.sql:/docker-entrypoint-initdb.d/002_seed_lessons.sql
+    networks:
+      - lexi-network
+
+networks:
+  lexi-network:
 
 volumes:
   postgres_data:
