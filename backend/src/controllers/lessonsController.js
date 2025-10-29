@@ -1,3 +1,4 @@
+// Placeholder file
 const { query } = require('../config/database');
 
 // @desc    Get all lessons with filtering and pagination (compatible with Lessons.jsx)

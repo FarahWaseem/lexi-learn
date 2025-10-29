@@ -1,3 +1,4 @@
+// Placeholder file
 const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 

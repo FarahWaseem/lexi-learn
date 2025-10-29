@@ -16,7 +16,7 @@ const GuessTopic = ({ lesson, onComplete, handleSpeak }) => {
 
   const handleGuess = () => {
     setShowResult(true);
-    setTimeout(onComplete, 3000);
+    setTimeout(onComplete, 3001);
   };
 
   useEffect(() => {

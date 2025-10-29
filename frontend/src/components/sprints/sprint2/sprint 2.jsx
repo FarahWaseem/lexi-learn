@@ -501,7 +501,7 @@ const LexiLearnPrototype = () => {
       
       setTimeout(() => {
         setShowVoiceChat(true);
-      }, 3000);
+      }, 3001);
     };
 
     return (

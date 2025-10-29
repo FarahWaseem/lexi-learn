@@ -1,32 +1,36 @@
 @import "./themes/theme.css";
-
 .app-container {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
-  background-color: var(--color-background);
+  min-height: 100vh;
 }
 
+/* Sidebar ثابت على اليسار */
 .sidebar {
-  width: 220px;
+  width: 220px;       /* نفس عرض sidebar */
   height: 100vh;
-  position: fixed;
+  position: fixed;    /* يظل ثابت */
   left: 0;
   top: 0;
 }
 
+/* العمود الأيمن (Header + Main) */
 .content-container {
-  margin-left: 220px;
+  margin-left: 220px;  /* عشان Sidebar ما يغطيه */
   display: flex;
   flex-direction: column;
   width: calc(100% - 220px);
-  height: 100vh;
 }
 
+/* Header يأخذ عرض كامل العمود الأيمن */
+.header {
+  width: 100%;
+  height: 70px;     
+}
+
+/* Main content */
 .main-content {
-  flex: 1;
-  padding: 20px 30px;
-  background-color: var(--color-background);
-  overflow-y: auto;
-  box-sizing: border-box;
+  flex: 1;            
+  padding: 20px;
+  background-color: #f9f9f9;
+  overflow-y: auto; 
 }
