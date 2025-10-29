@@ -1,5 +1,6 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useUser as useClerkUser, useClerk } from "@clerk/clerk-react";
 import { useUser } from "../../context/UserContext"; 
 import Settings from "./settings/Settings";
 import ProfileDropdown from "./ProfileDropdown/ProfileDropdown";
@@ -7,10 +8,26 @@ import "./Header.css";
 
 function Header() {
   const location = useLocation();
-  const { user } = useUser();
+  const navigate = useNavigate();
+  const { user: localUser } = useUser();
+  const { user: clerkUser } = useClerkUser();
+  const { signOut } = useClerk();
+  
+  // Use Clerk user data if available, otherwise fall back to local user
+  const user = clerkUser ? {
+    firstName: clerkUser.firstName || localUser.firstName,
+    lastName: clerkUser.lastName || localUser.lastName,
+    avatar: clerkUser.imageUrl || localUser.avatar
+  } : localUser;
+  
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/sign-in");
+  };
 
   const pageInfo = {
     "/dashboard": {
@@ -99,7 +116,7 @@ function Header() {
             {isProfileOpen && (
               <ProfileDropdown
               onSettingsClick={handleOpenSettings}
-              onLogoutClick={() => console.log("Logout clicked")}
+              onLogoutClick={handleLogout}
               />
             )}
 
