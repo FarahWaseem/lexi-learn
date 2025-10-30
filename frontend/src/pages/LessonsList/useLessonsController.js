@@ -103,7 +103,7 @@ export default function useLessonsController(online) {
 
   function onAction(lesson) {
     if (lesson.completed && lesson.summarySessionId)
-      navigate(`/summary/${lesson.summarySessionId}`);
+      navigate(`/lessonSammary/${lesson.summarySessionId}`);
     else if (lesson.unlocked)
       navigate(`/lesson/${lesson.id}`);
   }

@@ -386,11 +386,11 @@ export default function SimpleLesson() {
             setStarting(false);
         }
     }
-
     function handleGoToSummary() {
         if (!sessionId) return;
-        navigate(`/summary/${sessionId}`);
+        navigate(`/lessonSammary/${sessionId}`);
     }
+
 
     return (
         <div className="lesson-shell">
