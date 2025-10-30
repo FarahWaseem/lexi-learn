@@ -3,7 +3,6 @@
 -- Clean, Scalable, No Seed Data
 -- ============================================
 
--- 💥 احذف أي سكيمة سابقة (اختياري)
 DROP SCHEMA IF EXISTS public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO public;
