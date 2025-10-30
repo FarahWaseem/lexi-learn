@@ -1,0 +1,10 @@
+.empty-state {
+  text-align: center;
+  margin-top: 50px;
+  opacity: 0.9;
+}
+
+.empty-img {
+  width: 180px;
+  margin-bottom: 16px;
+}

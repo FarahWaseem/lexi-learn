@@ -1,7 +1,7 @@
 import React from "react";
 import "./NoInternet.css";
 import Button from "../../reusable/Button/Button";
-import zaytoonaSad from "../../../assets/images/zaytoonaNoInternet.png"; // الصورة اللي استخدمتيها في الفيجما
+import zaytoonaSad from "../../../assets/images/zaytoonaNoInternet.png"; 
 
 export default function NoInternet({ onRetry }) {
   return (

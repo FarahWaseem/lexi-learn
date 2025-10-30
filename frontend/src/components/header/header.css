@@ -20,7 +20,7 @@
   align-items: center;
   justify-content: flex-start;
   gap: 16px;
-    overflow: visible;
+  overflow: visible;
 
 }
 
@@ -49,8 +49,8 @@
 }
 
 .page-subtitle {
-  font-size: 16px;
-  font-weight: 500;
+  font-size: var(--font-6);
+  font-weight: var(--font-medium);
   color: var(--text-secondary);
   margin: 0;
   text-align: left;
@@ -63,9 +63,9 @@
 }
 
 .lang-btn {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border: 1px solid var(--color-stroke);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--color-card);
   color: var(--text-primary);
   font-weight: 600;
@@ -170,4 +170,29 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+}
+
+@media (max-width: 992px) {
+  .header {
+    padding: 0 8px;
+    height: 90px;
+  }
+  
+  .header-right {
+    gap: 12px;
+  }
+
+  .page-icon {
+    width: 55px; 
+    height: 55px;
+  }
+
+  .page-title {
+    font-size: var(--font-5);
+    font-weight: var(--font-bold);
+  }
+
+  .profile-name {
+    display: none;
+  }
 }

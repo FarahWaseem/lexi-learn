@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { connectRealtime } from "../../lib/realtime";
 import { startSTT } from "../../utils/voice";
-import "./SimpleLesson.css";
+import "./Lesson.css";
 import { markCompleted } from "../../utils/progress";
 import { useAddWord } from "../../hooks/useVocabNotebook";
 
@@ -418,11 +418,11 @@ export default function SimpleLesson() {
             setStarting(false);
         }
     }
-
     function handleGoToSummary() {
         if (!sessionId) return;
-        navigate(`/summary/${sessionId}`);
+        navigate(`/lessonSammary/${sessionId}`);
     }
+
 
     return (
         <div className="lesson-shell">

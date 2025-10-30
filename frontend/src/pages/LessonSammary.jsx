@@ -1,8 +1,8 @@
-// /src/pages/Summary.jsx
+// C:\Users\Pc\Desktop\lexi-learn\frontend\src\pages\LessonSammary.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import "./Summary.css";
+import "./LessonSammary.css";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -143,7 +143,7 @@ function buildClientPDF(data, qaLog = []) {
   return doc;
 }
 
-export default function Summary() {
+export default function LessonSammary() {
   const { id } = useParams(); // sessionId
   const navigate = useNavigate();
   const { getToken } = useAuth();
