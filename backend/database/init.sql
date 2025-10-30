@@ -15,6 +15,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ============================================
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  clerk_user_id VARCHAR(150) UNIQUE,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100),
   email VARCHAR(150) UNIQUE NOT NULL,
@@ -156,6 +157,28 @@ CREATE TABLE notifications (
   created_at TIMESTAMP DEFAULT NOW()
 );
 CREATE INDEX idx_notifications_user ON notifications(user_id);
+
+-- ============================================
+-- 1️⃣2️⃣ USER VOCABULARY WORDS (دفتر الكلمات الخاص بكل مستخدم)
+-- ============================================
+CREATE TABLE user_vocab_words (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  lesson VARCHAR(255),
+  word VARCHAR(255) NOT NULL,
+  translation VARCHAR(255),
+  example TEXT,
+  audio_url TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Index for faster queries by user
+CREATE INDEX idx_user_vocab_words_user ON user_vocab_words(user_id);
+-- Index for filtering by lesson
+CREATE INDEX idx_user_vocab_words_lesson ON user_vocab_words(lesson);
+-- Prevent duplicate words per user
+CREATE UNIQUE INDEX idx_user_vocab_unique ON user_vocab_words(user_id, word);
 
 -- ============================================
 -- 💡 VIEW user_day_summary

@@ -1,6 +1,5 @@
 import React from "react";
 import "./LastVocabs.css";
-import { dashboardMockData } from "../../../../data/dashboardMockData"; 
 import zaytoonaReadingBook from "../../../../assets/images/zaytoonaReadingBook.png";
 import SpeakerIconSvg from "../../../../assets/icons/volume-high.svg"; 
 
@@ -16,15 +15,8 @@ const handleSpeak = (text) => {
   }
 };
 
-export default function LastVocabs() {
-  const lastLessons = dashboardMockData.lessons.slice(-2);
-  let vocabs = [];
-  lastLessons.forEach(lesson => {
-    vocabs = vocabs.concat(lesson.vocabs);
-  });
-  
-  vocabs = vocabs.slice(-8); 
-  const isEmpty = !vocabs.length;
+export default function LastVocabs({ vocabs = [] }) {
+  const isEmpty = !vocabs || vocabs.length === 0;
 
   return (
     <div className="last-vocabs"> 

@@ -1,0 +1,284 @@
+### LexiLearn Profile & Settings API Tests
+### Use this file with REST Client extension in VS Code
+
+@baseUrl = http://localhost:3001
+@token = YOUR_CLERK_TOKEN_HERE
+
+###############################################
+# 1. Profile Management
+###############################################
+
+### GET Profile
+GET {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+
+###
+
+### UPDATE Profile
+PUT {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Ahmed",
+  "lastName": "Ali"
+}
+
+###
+
+### UPDATE Profile - Invalid (too short)
+PUT {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "A",
+  "lastName": "B"
+}
+
+###
+
+###############################################
+# 2. Settings & Preferences
+###############################################
+
+### GET Settings
+GET {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+
+###
+
+### UPDATE Settings
+PUT {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "preferences": {
+    "notifications": true,
+    "emailNotifications": false,
+    "soundEffects": true,
+    "darkMode": true
+  }
+}
+
+###
+
+### UPDATE Settings - Disable All
+PUT {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "preferences": {
+    "notifications": false,
+    "emailNotifications": false,
+    "soundEffects": false,
+    "darkMode": false
+  }
+}
+
+###
+
+###############################################
+# 3. Achievements
+###############################################
+
+### GET Achievements
+GET {{baseUrl}}/api/profile/achievements
+Authorization: Bearer {{token}}
+
+###
+
+###############################################
+# 4. Activity History
+###############################################
+
+### GET Activity (Default: 20)
+GET {{baseUrl}}/api/profile/activity
+Authorization: Bearer {{token}}
+
+###
+
+### GET Activity (Limited to 10)
+GET {{baseUrl}}/api/profile/activity?limit=10
+Authorization: Bearer {{token}}
+
+###
+
+### GET Activity (More: 50)
+GET {{baseUrl}}/api/profile/activity?limit=50
+Authorization: Bearer {{token}}
+
+###
+
+###############################################
+# 5. Account Management
+###############################################
+
+### DELETE Account (without confirmation)
+DELETE {{baseUrl}}/api/profile/account
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "confirm": "NO"
+}
+
+###
+
+### DELETE Account (with confirmation) - BE CAREFUL!
+# DELETE {{baseUrl}}/api/profile/account
+# Authorization: Bearer {{token}}
+# Content-Type: application/json
+# 
+# {
+#   "confirm": "DELETE"
+# }
+
+###
+
+###############################################
+# 6. Complete Profile Flow Test
+###############################################
+
+### Step 1: Get current profile
+GET {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+
+### Step 2: Update profile name
+PUT {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Ahmed",
+  "lastName": "Ali"
+}
+
+### Step 3: Check achievements
+GET {{baseUrl}}/api/profile/achievements
+Authorization: Bearer {{token}}
+
+### Step 4: View activity
+GET {{baseUrl}}/api/profile/activity?limit=5
+Authorization: Bearer {{token}}
+
+### Step 5: Get settings
+GET {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+
+###
+
+###############################################
+# 7. Error Cases
+###############################################
+
+### Unauthorized (no token)
+GET {{baseUrl}}/api/profile
+
+###
+
+### Invalid token
+GET {{baseUrl}}/api/profile
+Authorization: Bearer invalid_token_here
+
+###
+
+### Missing required fields
+PUT {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Ahmed"
+}
+
+###
+
+###############################################
+# 8. Settings Page Flow
+###############################################
+
+### Load Settings Page
+GET {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+
+### Toggle Dark Mode ON
+PUT {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "preferences": {
+    "notifications": true,
+    "emailNotifications": true,
+    "soundEffects": true,
+    "darkMode": true
+  }
+}
+
+### Toggle Notifications OFF
+PUT {{baseUrl}}/api/profile/settings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "preferences": {
+    "notifications": false,
+    "emailNotifications": false,
+    "soundEffects": true,
+    "darkMode": true
+  }
+}
+
+###
+
+###############################################
+# 9. Profile Stats Verification
+###############################################
+
+### Get Profile with Stats
+GET {{baseUrl}}/api/profile
+Authorization: Bearer {{token}}
+
+# Expected Response:
+# {
+#   "ok": true,
+#   "profile": {
+#     "firstName": "...",
+#     "lastName": "...",
+#     "stats": {
+#       "totalLessons": 0,      // Should increase after completing lessons
+#       "totalWords": 0,        // Should increase with completed lessons
+#       "totalMinutes": 0,      // Should increase with practice time
+#       "avgScore": 0           // Should show average of all scores
+#     }
+#   }
+# }
+
+###
+
+###############################################
+# 10. Achievement Milestones Test
+###############################################
+
+### Check Achievement Progress
+GET {{baseUrl}}/api/profile/achievements
+Authorization: Bearer {{token}}
+
+# Achievements you should see based on progress:
+# 🎯 First Steps        - After 1 lesson
+# 📚 Dedicated Learner  - After 10 lessons
+# ⭐ Halfway Hero       - After 30 lessons
+# 🏆 Course Champion    - After 60 lessons
+# 🔥 On Fire           - 3-day streak
+# 💪 Week Warrior      - 7-day streak
+# 🌟 Month Master      - 30-day streak
+# 🎓 High Achiever     - 70+ average
+# 💯 Perfect Student   - 90+ average
+# 📖 Word Collector    - 50 words
+# 🧠 Vocabulary Master - 200 words
+
+###
+

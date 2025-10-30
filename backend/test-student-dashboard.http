@@ -1,0 +1,104 @@
+### LexiLearn Student Dashboard API Tests
+### Use this file with REST Client extension in VS Code
+
+@baseUrl = http://localhost:3001
+@token = YOUR_CLERK_TOKEN_HERE
+
+###############################################
+# Student Dashboard Endpoints
+###############################################
+
+### 1. Get Complete Dashboard Data (Recommended)
+GET {{baseUrl}}/api/student/dashboard
+Authorization: Bearer {{token}}
+
+###
+
+### 2. Get Stats Only (Header)
+GET {{baseUrl}}/api/student/stats
+Authorization: Bearer {{token}}
+
+###
+
+### 3. Get Recent Lessons (Default: 3)
+GET {{baseUrl}}/api/student/recent-lessons
+Authorization: Bearer {{token}}
+
+###
+
+### 4. Get Recent Lessons (Custom Limit)
+GET {{baseUrl}}/api/student/recent-lessons?limit=5
+Authorization: Bearer {{token}}
+
+###
+
+### 5. Get Practice History (Last 7 Days)
+GET {{baseUrl}}/api/student/practice-history
+Authorization: Bearer {{token}}
+
+###
+
+### 6. Get Practice History (Custom Days)
+GET {{baseUrl}}/api/student/practice-history?days=14
+Authorization: Bearer {{token}}
+
+###
+
+### 7. Get Next Lesson
+GET {{baseUrl}}/api/student/next-lesson
+Authorization: Bearer {{token}}
+
+###
+
+###############################################
+# Complete Dashboard Flow Test
+###############################################
+
+### Step 1: Get complete dashboard on page load
+GET {{baseUrl}}/api/student/dashboard
+Authorization: Bearer {{token}}
+
+### Step 2: Refresh only stats (e.g., after completing a lesson)
+GET {{baseUrl}}/api/student/stats
+Authorization: Bearer {{token}}
+
+### Step 3: Get next lesson info
+GET {{baseUrl}}/api/student/next-lesson
+Authorization: Bearer {{token}}
+
+###
+
+###############################################
+# Comparison with Mock Data
+###############################################
+
+### Mock Data Structure (for reference):
+# {
+#   user: {
+#     firstName: "Ahmed",
+#     lastName: "Ali",
+#     streakDays: 3
+#   },
+#   stats: {
+#     newWords: 50,
+#     completedLessons: 4,
+#     totalTime: 100,
+#     goalProgress: 30
+#   },
+#   lessons: [
+#     {
+#       id: 1,
+#       title: "Lesson 1",
+#       desc: "Basic greetings",
+#       vocabs: [...]
+#     }
+#   ],
+#   practiceHistory: [
+#     { day: "Sat", minutes: 10 }
+#   ]
+# }
+
+### API Response (should match):
+GET {{baseUrl}}/api/student/dashboard
+Authorization: Bearer {{token}}
+

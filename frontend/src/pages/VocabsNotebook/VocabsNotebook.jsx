@@ -1,50 +1,61 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "../../components/sidebar/Sidebar";
 import Toolbar from "../../components/reusable/Toolbar/Toolbar";
 import VocabCard from "../../components/reusable/VocabCard/VocabCard";
 import Pagination from "../../components/reusable/pagination/pagination";
 import Filter from "../../components/reusable/filter/Filter";
+import { useVocabNotebook, useDeleteWord } from "../../hooks/useVocabNotebook";
 import "./VocabsNotebook.css";
 
 function VocabsNotebook() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-
   const [showFilter, setShowFilter] = useState(false);
   const [selectedLessons, setSelectedLessons] = useState([]);
   const [order, setOrder] = useState("asc");
-
   const [tempLessons, setTempLessons] = useState([]);
   const [tempOrder, setTempOrder] = useState("asc");
 
-  const [wordList, setWordList] = useState([
-    { lesson: "Lesson 6: In school", word: "Learn", translation: "يتعلم" },
-    { lesson: "Lesson 3: Greetings", word: "Hello", translation: "مرحبا" },
-    { lesson: "Lesson 1: Shopping", word: "Buy", translation: "يشتري" },
-    { lesson: "Lesson 2: Travel", word: "Go", translation: "يذهب" },
-  ]);
+  // Fetch vocabulary data from backend
+  const {
+    words,
+    totalWords,
+    uniqueLessons,
+    pagination,
+    loading,
+    error,
+    refetch,
+  } = useVocabNotebook({
+    page: currentPage,
+    limit: 10,
+    search,
+    lesson: selectedLessons.length === 1 ? selectedLessons[0] : '',
+    sortBy: 'word',
+    sortOrder: order,
+    autoFetch: true,
+  });
 
-  const handleDelete = (wordToDelete) => {
-    setWordList((prev) => prev.filter((w) => w.word !== wordToDelete));
-  };
+  const { deleteWord, loading: deleteLoading } = useDeleteWord();
 
-  const filtered = useMemo(() => {
-    let result = wordList.filter((w) =>
-      w.word.toLowerCase().includes(search.toLowerCase())
-    );
-
-    if (tempLessons.length > 0) {
-      result = result.filter((w) => tempLessons.includes(w.lesson));
+  const handleDelete = async (wordId) => {
+    try {
+      await deleteWord(wordId);
+      // Refetch the list after deletion
+      refetch();
+    } catch (error) {
+      console.error('Failed to delete word:', error);
+      alert('Failed to delete word. Please try again.');
     }
+  }; 
 
-    result.sort((a, b) =>
-      tempOrder === "desc"
-        ? b.word.localeCompare(a.word)
-        : a.word.localeCompare(b.word)
-    );
-
-    return result;
-  }, [wordList, search, tempLessons, tempOrder]); 
+  // Refetch when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1); // Reset to first page when filters change
+    } else {
+      refetch();
+    }
+  }, [search, selectedLessons, order]);
 
   const openFilter = () => {
     setTempLessons([...selectedLessons]);
@@ -67,8 +78,6 @@ function VocabsNotebook() {
   const clearFilter = () => {
     setTempLessons([]);
   };
-
-  const uniqueLessons = [...new Set(wordList.map((w) => w.lesson))]; 
 
   const filterSections = [
     {
@@ -110,6 +119,31 @@ function VocabsNotebook() {
     speechSynthesis.speak(utter);
   };
 
+  // Show loading state
+  if (loading && words.length === 0) {
+    return (
+      <div className="vocab-page">
+        <Sidebar />
+        <div className="vocab-content">
+          <p className="loading-message">Loading vocabulary...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && words.length === 0) {
+    return (
+      <div className="vocab-page">
+        <Sidebar />
+        <div className="vocab-content">
+          <p className="error-message">Error: {error}</p>
+          <button onClick={refetch}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="vocab-page">
       <Sidebar />
@@ -130,18 +164,20 @@ function VocabsNotebook() {
           />
         )}
 
-        <p className="word-count">Totally {filtered.length} words saved</p>
+        <p className="word-count">
+          Totally {totalWords} word{totalWords !== 1 ? 's' : ''} saved
+        </p>
 
         <div className="vocab-grid">
-          {filtered.length > 0 ? (
-            filtered.map((item, index) => (
+          {words.length > 0 ? (
+            words.map((item) => (
               <VocabCard
-                key={index}
+                key={item.id}
                 lesson={item.lesson}
                 word={item.word}
                 translation={item.translation}
                 onPlay={() => playSound(item.word)}
-                onDelete={() => handleDelete(item.word)} 
+                onDelete={() => handleDelete(item.id)}
               />
             ))
           ) : (
@@ -149,11 +185,13 @@ function VocabsNotebook() {
           )}
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={10}
-          onPageChange={setCurrentPage}
-        />
+        {pagination && pagination.totalPages > 1 && (
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ function AutoUpsert() {
                 const token = await getToken();
                 if (!token) return;
 
-                const url = "http://localhost:3001/api/me";
+                const url = "http://127.0.0.1:3001/api/me";
                 console.log(
                     "🔸 calling",
                     url,
