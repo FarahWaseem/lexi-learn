@@ -2,7 +2,7 @@ import React from "react";
 import { useUser } from "../../../../context/UserContext";
 import "./AccountTab.css";
 
-function AccountTab({ onClose }) {
+function AccountTab({ onClose, onUserChange }) {
   const { user, setUser } = useUser();
 
   const handleImageChange = (event) => {
@@ -10,7 +10,9 @@ function AccountTab({ onClose }) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setUser({ ...user, avatar: reader.result });
+        const updatedUser = { ...user, avatar: reader.result };
+        setUser(updatedUser);
+        if (onUserChange) onUserChange(updatedUser);
       };
       reader.readAsDataURL(file);
     }
@@ -22,7 +24,9 @@ function AccountTab({ onClose }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
+    const updatedUser = { ...user, [name]: value };
+    setUser(updatedUser);
+    if (onUserChange) onUserChange(updatedUser);
   };
 
   return (
