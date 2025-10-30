@@ -6,6 +6,7 @@ import { connectRealtime } from "../../lib/realtime";
 import { startSTT } from "../../utils/voice";
 import "./SimpleLesson.css";
 import { markCompleted } from "../../utils/progress";
+import { useAddWord } from "../../hooks/useVocabNotebook";
 
 // ✅ تخزين أوفلاين (مطابق لـ /src/offline/db.js)
 import { saveSummaryJson, saveSummaryPdf, saveQALog } from "../../offline/db";
@@ -16,6 +17,7 @@ export default function SimpleLesson() {
     const { getToken } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { addWord } = useAddWord();
 
     const initialDayFromURL = Number(searchParams.get("day")) || 1;
 
@@ -42,6 +44,8 @@ export default function SimpleLesson() {
     const [finished, setFinished] = useState(false);
     const [starting, setStarting] = useState(false);
     const [err, setErr] = useState("");
+    const [savedWords, setSavedWords] = useState(new Set());
+    const [savingWord, setSavingWord] = useState(null);
 
     // ✅ لوج Q&A: نخزّنه في IndexedDB بصيغة: { day, topic, qa:[{idx,prompt,userText,correction}] }
     const [qaLog, setQaLog] = useState([]);
@@ -190,6 +194,33 @@ export default function SimpleLesson() {
         } catch { }
     }
 
+    // حفظ كلمة في notebook
+    async function handleSaveWord(word) {
+        if (savedWords.has(word.word)) {
+            alert(`"${word.word}" is already saved to your notebook!`);
+            return;
+        }
+
+        setSavingWord(word.word);
+        try {
+            await addWord({
+                lesson: `Day ${dayNumber}${topic ? ` - ${topic}` : ''}`,
+                word: word.word,
+                translation: word.meaning || '',
+                example: word.example || '',
+                audioUrl: null
+            });
+            
+            setSavedWords(prev => new Set([...prev, word.word]));
+            alert(`✅ "${word.word}" saved to your Vocab Notebook!`);
+        } catch (error) {
+            console.error('Error saving word:', error);
+            alert(`❌ Failed to save "${word.word}". Please try again.`);
+        } finally {
+            setSavingWord(null);
+        }
+    }
+
     async function handleStart() {
         try {
             setErr("");
@@ -197,6 +228,7 @@ export default function SimpleLesson() {
             setFinished(false);
             setMessages([]);
             setWords([]);
+            setSavedWords(new Set());
             setQaLog([]); // نبدأ مصفوفة فاضية
             setTopic("");
             answeredSetRef.current.clear();
@@ -461,9 +493,19 @@ export default function SimpleLesson() {
                                         <b>{w.word}</b>
                                         {w.ipa ? <span className="ipa"> /{w.ipa}/</span> : null}
                                         {w.meaning ? <div className="meaning">{w.meaning}</div> : null}
-                                        {w.example ? <div className="ex">“{w.example}”</div> : null}
+                                        {w.example ? <div className="ex">"{w.example}"</div> : null}
                                     </div>
-                                    <button className="speak" onClick={() => speakAsync(w.word || "")} title="Pronounce">🔊</button>
+                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                        <button className="speak" onClick={() => speakAsync(w.word || "")} title="Pronounce">🔊</button>
+                                        <button 
+                                            className="save-word" 
+                                            onClick={() => handleSaveWord(w)} 
+                                            disabled={savingWord === w.word || savedWords.has(w.word)}
+                                            title={savedWords.has(w.word) ? "Already saved" : "Save to Vocab Notebook"}
+                                        >
+                                            {savingWord === w.word ? '⏳' : savedWords.has(w.word) ? '✅' : '📝'}
+                                        </button>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
