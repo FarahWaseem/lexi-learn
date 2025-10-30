@@ -4,3 +4,7 @@ export const GEMINI_API_KEY = 'AIzaSyAcxAN9Gw5_naW1WAfMtzrJ7sr9Dt_wUd0';
 export const ELEVENLABS_VOICE_ID = '21m00Tcm4TlvDq8ikWAM'; 
 export const INITIAL_POINTS = 0;
 export const CHALLENGE_DURATION = 180;
+
+export const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+export const TOPICS_CACHE_KEY = "topics_cache_v1";
+export const PAGE_SIZE = 6;

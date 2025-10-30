@@ -1,124 +1,76 @@
 // frontend/src/App.jsx
 import React, { useEffect, useRef, useState } from "react";
-import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/clerk-react";
-
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
-
-// من شغل الفريق
+import NoInternet from "./components/reusable/NoInternet/NoInternet";
 import Dashboard from "./pages/Dashboard";
-// ❌ حذف Lessons.jsx
 import VocabsNotebook from "./pages/VocabsNotebook/VocabsNotebook";
-
-// من شغلك
-import Lesson from "./pages/Lessons/Lesson";
-import SimpleLesson from "./pages/Lessons/SimpleLesson";
-import LessonSammary from "./pages/LessonSammary/lessonSammary";
-import Summary from "./pages/Summary";
-
+import LessonsList from "./pages/LessonsList/LessonsList";
+import Lesson from "./pages/Lesson/Lesson";
+import LessonSammary from "./pages/LessonSammary";
 import { useTheme } from "./context/ThemeContext";
 import { persistCurrentRoute, canWorkOffline } from "./utils/offlineManager";
+import useNetworkStatus from "./hooks/useNetworkStatus";
 import "./App.css";
-
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+import { API_BASE } from "./constants";
 
 function App() {
+  const online = useNetworkStatus();
   const { darkMode } = useTheme();
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [canUseOffline, setCanUseOffline] = useState(true);
   const [showOfflineBanner, setShowOfflineBanner] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const onSummary = location.pathname.startsWith("/summary/");
 
-  // مراقبة الاتصال
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setShowOfflineBanner(false);
-      console.log("✅ Back online");
-    };
+    setShowOfflineBanner(!online);
+  }, [online]);
 
-    const handleOffline = () => {
-      setIsOnline(false);
-      setShowOfflineBanner(true);
-      console.log("⚠️ Offline mode activated");
-    };
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  // Check if we can work offline
   useEffect(() => {
     (async () => {
       const hasCache = await canWorkOffline();
       setCanUseOffline(hasCache);
-
-      if (!navigator.onLine && !hasCache) {
-        console.warn("⚠️ No cached data available for offline use");
-      }
     })();
   }, []);
 
-  // Persist current route for offline restoration
   useEffect(() => {
     if (location.pathname !== "/login" && location.pathname !== "/signup") {
       persistCurrentRoute(location.pathname, location.search);
     }
   }, [location.pathname, location.search]);
 
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  if (!online && !canUseOffline) {
+    return <NoInternet onRetry={handleRetry} />;
+  }
+
   return (
     <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
-      {/* Offline Banner */}
       {showOfflineBanner && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#f59e0b',
-          color: 'white',
-          padding: '8px 16px',
-          textAlign: 'center',
-          zIndex: 9999,
-          fontSize: '14px',
-          fontWeight: '500',
-        }}>
+        <div className="offline-banner">
           ⚠️ You're offline - Using cached data
-          {!canUseOffline && " (Limited functionality - visit pages while online to enable full offline access)"}
+          {!canUseOffline && " (Limited functionality)"}
         </div>
       )}
 
       <SignedIn>
-        {!onSummary && isOnline && <AutoUpsert />}
+        {!onSummary && online && <AutoUpsert />}
         <Sidebar />
         <div className="content-container" style={{ marginTop: showOfflineBanner ? '40px' : '0' }}>
           <Header />
           <main className="main-content">
             <Routes>
-              {/* من شغل الفريق */}
               <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
-
-              {/* ✅ لما تضغطي Lesson من السايدبار، يفتح Lesson.jsx */}
-              <Route path="/lessons" element={<Lesson />} />
-
-              <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
-
-              {/* صفحاتك الخاصة */}
-              <Route path="/lesson" element={<Lesson />} />
-              <Route path="/lesson1" element={<SimpleLesson />} />
-              <Route path="/lessonSammary" element={<LessonSammary />} />
-              <Route path="/summary/:id" element={<Summary />} />
-
-              {/* أي مسار غير معروف */}
+              <Route path="/lessons" element={<LessonsList online={online} />} />
+              <Route path="/vocabsNotebook" element={<VocabsNotebook online={online} />} />
+              <Route path="/lesson/:id" element={<Lesson online={online} />} />
+              <Route path="/lessonSammary/:id" element={<LessonSammary online={online} />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
@@ -138,7 +90,6 @@ function App() {
   );
 }
 
-/** AutoUpsert — شغلك */
 function AutoUpsert() {
   const { isSignedIn, getToken } = useAuth();
   const calledRef = useRef(false);
@@ -156,48 +107,16 @@ function AutoUpsert() {
     calledRef.current = true;
 
     (async () => {
-      const maxAttempts = 3;
-      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      let attempt = 0;
-      let lastError = null;
+      try {
+        const token = await getToken();
+        if (!token) throw new Error("Missing token");
 
-      while (attempt < maxAttempts && !abortRef.current) {
-        attempt += 1;
-        try {
-          const token = await getToken(
-            attempt === 1 ? undefined : { skipCache: true }
-          );
-          if (!token) throw new Error("Missing Clerk token");
-
-          const res = await fetch(`${API_BASE}/api/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const text = await res.text();
-          let payload;
-          try {
-            payload = JSON.parse(text);
-          } catch {
-            payload = text;
-          }
-
-          if (!res.ok)
-            throw new Error(
-              `HTTP ${res.status} ${res.statusText} — ${payload?.error || ""}`.trim()
-            );
-
-          console.log("✅ [AutoUpsert] /api/me ok:", payload);
-          return;
-        } catch (e) {
-          lastError = e;
-          console.warn(`⚠️ [AutoUpsert] attempt ${attempt} failed:`, e.message);
-          if (attempt >= maxAttempts) break;
-          await sleep(attempt === 1 ? 200 : 600);
-        }
+        await fetch(`${API_BASE}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (e) {
+        console.warn("AutoUpsert failed:", e.message);
       }
-
-      if (!abortRef.current && lastError)
-        console.error("❌ [AutoUpsert] giving up:", lastError.message);
     })();
   }, [isSignedIn, getToken]);
 

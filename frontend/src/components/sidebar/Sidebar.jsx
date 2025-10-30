@@ -29,21 +29,24 @@ export default function Sidebar() {
             to="/dashboard"
             className={({ isActive }) => (isActive ? "active-link" : "")}
           >
-            <img src={DashboardIcon} alt="Dashboard" className="icon" /> Dashboard
+            <img src={DashboardIcon} alt="Dashboard" className="icon" /> 
+            <span>Dashboard</span>
           </NavLink>
 
           <NavLink
             to="/lessons"
             className={({ isActive }) => (isActive ? "active-link" : "")}
           >
-            <img src={LessonIcon} className="icon" /> Lesson
+            <img src={LessonIcon} className="icon" />
+            <span>Lessons</span>
           </NavLink>
 
           <NavLink
             to="/vocabsNotebook"
             className={({ isActive }) => (isActive ? "active-link" : "")}
           >
-            <img src={VocabIcon} className="icon" /> VocabNotebook
+            <img src={VocabIcon} className="icon" />
+            <span>VocabNotebook</span>
           </NavLink>
         </div>
       </div>

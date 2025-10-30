@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
-import "./Summary.css";
+import "./LessonSammary.css";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";

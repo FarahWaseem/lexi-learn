@@ -6,11 +6,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
 
   const VISIBLE = 5;
 
-  // احسبي بداية ونهاية النافذة (5 أزرار دائماً قدر الإمكان)
-  let start = currentPage - Math.floor(VISIBLE / 2); // current - 2
-  start = Math.max(1, start);                        // لا تنزلي تحت 1
+  let start = currentPage - Math.floor(VISIBLE / 2); 
+  start = Math.max(1, start);                        
   if (start + VISIBLE - 1 > totalPages) {
-    start = Math.max(1, totalPages - VISIBLE + 1);   // التصحيح عند النهاية
+    start = Math.max(1, totalPages - VISIBLE + 1);   
   }
   const end = Math.min(totalPages, start + VISIBLE - 1);
 
