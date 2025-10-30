@@ -1,22 +1,12 @@
-// Header.jsx — unified version (Clerk + Settings + ProfileDropdown + assets imports)
-
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-
-// ✅ Clerk (تسجيل خروج + التوكن)
 import { useClerk, useAuth, useUser as useClerkUser } from "@clerk/clerk-react";
-
-// ✅ لو بدك تحتفظي بكونتكستك المحلي للمستخدم (avatar مثلاً)
 import { useUser as useLocalUser } from "../../context/UserContext";
-
-// مكوناتك
+import { useLessonHeader } from "../../context/LessonContext"; // ✅ NEW
 import Settings from "./settings/Settings";
 import ProfileDropdown from "./ProfileDropdown/ProfileDropdown";
-
-// CSS
 import "./header.css";
 
-// ✅ استيراد صور/أيقونات كـ modules (يشتغل في build + PWA)
 import imgZaytoona from "../../assets/images/zaytoonaReadingBook.png";
 import imgLessonPage from "../../assets/images/lessonpage.png";
 import iconNotif from "../../assets/icons/notification.svg";
@@ -27,26 +17,21 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
 
 function Header() {
   const location = useLocation();
+  const { lessonHeader, setLessonHeader } = useLessonHeader(); 
 
-  // لغات + فتح القوائم
   const [lang, setLang] = useState("EN");
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Clerk
   const { signOut } = useClerk();
   const { getToken } = useAuth();
   const { user: clerkUser } = useClerkUser();
-
-  // Context المحلي (لأفاتارك المخزن محلياً)
   const { user: localUser } = useLocalUser() || { user: {} };
 
-  // الاسم المعروض (نجيب من DB أولاً، بعدين Clerk، بعدين Contextك)
   const [firstName, setFirstName] = useState(
     clerkUser?.firstName || localUser?.firstName || "User"
   );
 
-  // 🔹 جلب الاسم من قاعدة البيانات (/api/me) مع تخزين محلي كـ fallback للأوفلاين
   useEffect(() => {
     let abort = false;
 
@@ -88,38 +73,51 @@ function Header() {
     return () => {
       abort = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getToken, clerkUser?.firstName]);
 
-  // 👇 تعريف معلومات الصفحات (حافظنا على صفحاتك)
-  const pageInfo = {
+  const staticPages = {
     "/dashboard": {
       title: "Dashboard",
       subtitle: "Overview",
       img: imgZaytoona,
     },
-    "/lesson": {
-      title: "Lesson",
-      subtitle: "Manage your app",
+    "/lessons": {
+      title: "Lessons",
+      subtitle: "Browse all lessons",
       img: imgLessonPage,
     },
     "/vocabsNotebook": {
       title: "Vocabs notebook",
-      subtitle: "Your details",
+      subtitle: "Your saved words",
       img: imgLessonPage,
     },
-    "/lessonSammary": {
-      title: "Lesson Summary",
-      subtitle: "Your details",
+    "/settings": {
+      title: "Settings",
+      subtitle: "Manage your account",
       img: imgLessonPage,
     },
   };
 
-  const current = pageInfo[location.pathname] || {
+  let current = staticPages[location.pathname] || {
     title: "Welcome",
     subtitle: "Choose a page",
     img: imgZaytoona,
   };
+
+  if (lessonHeader) {
+    current = {
+      ...current,
+      title: lessonHeader.title || current.title,
+      subtitle: lessonHeader.subtitle || current.subtitle,
+      img: imgLessonPage,
+    };
+  }
+
+  useEffect(() => {
+    if (!location.pathname.startsWith("/lesson")) {
+      setLessonHeader(null);
+    }
+  }, [location.pathname, setLessonHeader]);
 
   const handleOpenSettings = () => {
     setIsProfileOpen(false);
@@ -141,14 +139,12 @@ function Header() {
     }
   };
 
-  // أفضل مصدر للأفاتار:
   const avatarSrc =
     localUser?.avatar || clerkUser?.imageUrl || iconUserCircle;
 
   return (
     <>
       <header className="header">
-        {/* يسار: عنوان/صورة الصفحة */}
         <div className="header-left">
           <img src={current.img} alt="page-icon" className="page-icon" />
           <div className="page-texts">
@@ -157,9 +153,7 @@ function Header() {
           </div>
         </div>
 
-        {/* يمين: لغة + إشعارات + بروفايل */}
         <div className="header-right">
-          {/* زر اللغة */}
           <button
             onClick={() => setLang(lang === "EN" ? "AR" : "EN")}
             className="lang-btn"
@@ -167,7 +161,6 @@ function Header() {
             {lang}
           </button>
 
-          {/* الإشعارات */}
           <div className="notification-wrapper">
             <img
               src={iconNotif}
@@ -177,14 +170,12 @@ function Header() {
             <span className="notification-badge">1</span>
           </div>
 
-          {/* البروفايل */}
           <div className="profile-wrapper">
             <button
               onClick={() => setIsProfileOpen(!isProfileOpen)}
               className="profile-btn"
             >
               <img src={avatarSrc} alt="profile" className="profile-img" />
-              {/* الاسم الأول فقط */}
               <span className="profile-name">{firstName}</span>
               <img src={iconArrowDown} alt="arrow" className="arrow-down" />
             </button>
@@ -199,7 +190,6 @@ function Header() {
         </div>
       </header>
 
-      {/* نافذة الإعدادات */}
       <Settings isOpen={isSettingsOpen} onClose={handleCloseSettings} />
     </>
   );

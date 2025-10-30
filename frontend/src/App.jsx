@@ -11,6 +11,7 @@ import LessonsList from "./pages/LessonsList/LessonsList";
 import Lesson from "./pages/Lesson/Lesson";
 import LessonSammary from "./pages/LessonSammary";
 import { useTheme } from "./context/ThemeContext";
+import { LessonProvider } from "./context/LessonContext";
 import { persistCurrentRoute, canWorkOffline } from "./utils/offlineManager";
 import useNetworkStatus from "./hooks/useNetworkStatus";
 import "./App.css";
@@ -50,6 +51,7 @@ function App() {
   }
 
   return (
+       <LessonProvider>
     <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
       {showOfflineBanner && (
         <div className="offline-banner">
@@ -87,6 +89,7 @@ function App() {
         </Routes>
       </SignedOut>
     </div>
+  </LessonProvider>
   );
 }
 

@@ -101,12 +101,20 @@ export default function useLessonsController(online) {
     currentPage * PAGE_SIZE
   );
 
-  function onAction(lesson) {
-    if (lesson.completed && lesson.summarySessionId)
-      navigate(`/summary/${lesson.summarySessionId}`);
-    else if (lesson.unlocked)
-      navigate(`/lesson/${lesson.id}`);
+ function onAction(lesson) {
+  if (lesson.completed && lesson.summarySessionId) {
+    navigate(`/lessonSammary/${lesson.summarySessionId}`);
   }
+ else if (lesson.unlocked)
+  navigate(`/lesson/${lesson.id}`, {
+    state: {
+      id: lesson.id,
+      title: lesson.title,
+      subtitle: lesson.description,
+    },
+  });
+
+}
 
   return {
     loading,
