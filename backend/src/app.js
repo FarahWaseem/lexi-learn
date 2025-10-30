@@ -19,8 +19,11 @@ function createApp() {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // Clerk middleware (early in chain)
-  app.use(clerkMiddleware());
+  // Clerk middleware (early in chain) - with publishableKey for proper token handling
+  app.use(clerkMiddleware({
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY,
+    secretKey: process.env.CLERK_SECRET_KEY,
+  }));
 
   // Static files
   const PUBLIC = path.join(__dirname, '..', 'public');
@@ -35,6 +38,7 @@ function createApp() {
   const dashboardAdvancedRouter = require('./routes/dashboard-advanced');
   const studentDashboardRouter = require('./routes/studentDashboard');
   const profileRouter = require('./routes/profile');
+  const vocabRouter = require('./routes/vocabRoutes');
 
   app.use('/api', topicsRouter);
   app.use('/api', usersRouter);
@@ -44,6 +48,7 @@ function createApp() {
   app.use('/api/dashboard/advanced', dashboardAdvancedRouter);
   app.use('/api/student', studentDashboardRouter); // Student Dashboard
   app.use('/api/profile', profileRouter); // Profile & Settings
+  app.use('/api/v1/vocab', vocabRouter); // Vocabulary Notebook
 
   // Health check
   app.get('/', (_req, res) => {
