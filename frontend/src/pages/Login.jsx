@@ -1,9 +1,10 @@
-import React from 'react'
+//login.jsx
+import { SignIn } from "@clerk/clerk-react"
 
-const Login = () => {
+export default function Login() {
   return (
-    <div>Login</div>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <SignIn path="/login" routing="path" signUpUrl="/signup" />
+    </div>
   )
 }
-
-export default Login

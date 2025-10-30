@@ -1,16 +1,16 @@
 @import "./themes/theme.css";
-
 .app-container {
   display: flex;
   height: 100vh;
   overflow: auto;
   background-color: var(--color-background);
+  min-height: 100vh;
 }
 
 .sidebar {
-  width: 220px;
+  width: 220px;     
   height: 100vh;
-  position: fixed;
+  position: fixed;    
   left: 0;
   top: 0;
 }
@@ -22,11 +22,15 @@ header {
 }
 
 .content-container {
-  margin-left: 220px;
+  margin-left: 220px;  
   display: flex;
   flex-direction: column;
   width: calc(100% - 220px);
-  height: 100vh;
+}
+
+.header {
+  width: 100%;
+  height: 70px;     
 }
 
 .main-content {

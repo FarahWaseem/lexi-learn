@@ -1,25 +1,32 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "name": "LexiLearn - English Learning App",
+  "short_name": "LexiLearn",
+  "description": "Learn English through interactive lessons and practice",
   "icons": [
     {
-      "src": "Logo.svg",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "/pwa-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
-      "src": "Logo.svg",
+      "src": "/pwa-512.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
-      "src": "Logo.svg",
-      "type": "image/png",
-      "sizes": "512x512"
+      "src": "/Logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait",
+  "theme_color": "#22c55e",
+  "background_color": "#ffffff",
+  "categories": ["education", "productivity"],
+  "lang": "en"
 }

@@ -1,0 +1,228 @@
+.lesson-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+}
+
+.lesson-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lesson-title {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.mascot {
+    font-size: 28px;
+}
+
+.lesson-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.day-picker label {
+    font-size: 12px;
+    color: #666;
+    display: block;
+}
+
+.day-picker input {
+    width: 80px;
+    padding: 6px;
+}
+
+.start-btn,
+.finish-btn,
+.export-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+.start-btn {
+    background: #0a8f36;
+    color: white;
+}
+
+.finish-btn {
+    background: #111;
+    color: #fff;
+}
+
+.export-btn {
+    background: #eee;
+}
+
+.done-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.lesson-body {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+    min-height: 70vh;
+}
+
+.chat-area {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.bubbles {
+    flex: 1;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.bubble {
+    max-width: 80%;
+    padding: 10px 12px;
+    border-radius: 14px;
+}
+
+.bubble.assistant {
+    background: #eaf6ee;
+    align-self: flex-start;
+}
+
+.bubble.user {
+    background: #111;
+    color: #fff;
+    align-self: flex-end;
+}
+
+.center-question {
+    text-align: center;
+    margin: 8px auto;
+}
+
+.timer {
+    margin-bottom: 8px;
+    color: #b00;
+    font-weight: 600;
+}
+
+.net-error {
+    color: #b00;
+    padding: 8px;
+    background: #fee;
+    border-radius: 8px;
+}
+
+.composer {
+    display: flex;
+    gap: 10px;
+    padding-top: 10px;
+}
+
+.mic {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: none;
+    background: #1f8b4c;
+    color: #fff;
+    cursor: pointer;
+}
+
+.mic.on {
+    background: #b00;
+}
+
+.next {
+    padding: 10px 14px;
+    border: none;
+    background: #222;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.vocab {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+}
+
+.vocab-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.vocab-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.vocab-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+}
+
+.ipa {
+    color: #4a4a4a;
+    margin-left: 6px;
+}
+
+.speak {
+    background: #f0f0f0;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.empty {
+    color: #777;
+}
+
+.stop-btn {
+    margin-left: 8px;
+    background: #e53935;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.stop-btn:hover {
+    background: #c62828;
+}
+.stop-btn, .resume-btn {
+  margin-left: 8px;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.stop-btn { background: #e53935; color: #fff; }
+.stop-btn:hover { background: #c62828; }
+.resume-btn { background: #2e7d32; color: #fff; }
+.resume-btn:hover { background: #1b5e20; }

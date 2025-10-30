@@ -1,74 +1,77 @@
 .lesson-card {
   background: var(--color-card);
-  border-radius: var(--radius-s);
-  box-shadow: var(--shadow-card);
-  padding: var(--spacing-xs);
+  border-radius: var(--radius-m);
+  box-shadow: var(--shadows-card);
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: var(--spacing-2xs);
+  gap: 12px;
   transition: all 0.2s ease-in-out;
+  min-height: 180px;
+  cursor: pointer;
 }
 
 .lesson-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--color-card-hover);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.lesson-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.lesson-number {
-  color: var(--text-primary);
-  font-size: var(--font-4);
-  font-weight: var(--font-bold);
-  font-family: var(--font-family);
-  margin: 0;
-  line-height: 36px;
-}
-
-.lesson-title {
-  color: var(--text-primary) !important;
-  font-size: var(--font-4);
-  font-weight: var(--font-bold);
-  margin: 0;
-}
-
-.lesson-description {
+.lesson-card__head {
   color: var(--text-secondary);
   font-size: var(--font-6);
-  font-family: var(--font-family);
+  margin-bottom: 4px;
+}
+
+.lesson-card__title {
+  font-size: var(--font-4);
+  font-weight: var(--font-bold);
+  margin: 0 0 8px;
+}
+
+.lesson-card__desc {
+  color: var(--text-secondary);
+  font-size: var(--font-6);
   line-height: 24px;
-  flex-grow: 1;
+  margin-bottom: 16px;
 }
 
-.lesson-btn {
-  border: none;
+.lesson-card__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn {
   border-radius: var(--radius-full);
-  padding: 8px 16px;
+  padding: 10px 18px;
   cursor: pointer;
-  font-size: var(--font-7);
-  font-family: var(--font-family);
-  transition: all 0.2s;
+  font-size: var(--font-6);
+  transition: all 0.2s ease-in-out;
+  border: none;
 }
 
-.lesson-btn.start {
+/* STATUS STYLES */
+.btn-green {
   background: var(--color-green);
   color: var(--color-white);
 }
 
-.lesson-btn.start:hover {
+.btn-green:hover {
   background: #006330;
 }
 
-.lesson-btn.summary {
+.btn-dark {
   background: var(--color-black);
   color: var(--color-white);
 }
 
-.lesson-btn.summary:hover {
+.btn-dark:hover {
   opacity: 0.85;
+}
+
+.btn-locked {
+  background: #e8e8e8;
+  color: #666;
+  cursor: not-allowed;
 }

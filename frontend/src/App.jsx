@@ -1,62 +1,126 @@
-import React, { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+// frontend/src/App.jsx
+import React, { useEffect, useRef, useState } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/clerk-react";
 import Sidebar from "./components/sidebar/Sidebar";
 import Header from "./components/header/Header";
-import Lessons from "./pages/Lessons/Lessons";
+import NoInternet from "./components/reusable/NoInternet/NoInternet";
 import Dashboard from "./pages/Dashboard";
 import VocabsNotebook from "./pages/VocabsNotebook/VocabsNotebook";
-import LessonSammary from "./pages/LessonSammary/lessonSammary";
-import NoInternet from "./components/reusable/NoInternet/NoInternet";
+import LessonsList from "./pages/LessonsList/LessonsList";
+import Lesson from "./pages/Lesson/Lesson";
+import LessonSammary from "./pages/LessonSammary";
 import { useTheme } from "./context/ThemeContext";
+import { persistCurrentRoute, canWorkOffline } from "./utils/offlineManager";
+import useNetworkStatus from "./hooks/useNetworkStatus";
 import "./App.css";
+import { API_BASE } from "./constants";
 
 function App() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-
+  const online = useNetworkStatus();
   const { darkMode } = useTheme();
+  const [canUseOffline, setCanUseOffline] = useState(true);
+  const [showOfflineBanner, setShowOfflineBanner] = useState(false);
+  const location = useLocation();
+  const onSummary = location.pathname.startsWith("/summary/");
 
-  // useEffect(() => {
-  //   const handleOnline = () => setIsOnline(true);
-  //   const handleOffline = () => setIsOnline(false);
+  useEffect(() => {
+    setShowOfflineBanner(!online);
+  }, [online]);
 
-  //   window.addEventListener("online", handleOnline);
-  //   window.addEventListener("offline", handleOffline);
+  useEffect(() => {
+    (async () => {
+      const hasCache = await canWorkOffline();
+      setCanUseOffline(hasCache);
+    })();
+  }, []);
 
-  //   return () => {
-  //     window.removeEventListener("online", handleOnline);
-  //     window.removeEventListener("offline", handleOffline);
-  //   };
-  // }, []);
+  useEffect(() => {
+    if (location.pathname !== "/login" && location.pathname !== "/signup") {
+      persistCurrentRoute(location.pathname, location.search);
+    }
+  }, [location.pathname, location.search]);
 
-  // const handleRetry = () => {
-  //   if (navigator.onLine) {
-  //     setIsOnline(true);
-  //   } else {
-  //     window.location.reload();
-  //   }
-  // };
+  const handleRetry = () => {
+    window.location.reload();
+  };
 
-  // if (!isOnline) {
-  //   return <NoInternet onRetry={handleRetry} />;
-  // }
+  if (!online && !canUseOffline) {
+    return <NoInternet onRetry={handleRetry} />;
+  }
 
   return (
     <div className={`app-container ${darkMode ? "dark-mode" : ""}`}>
-      <Sidebar />
-      <div className="content-container">
-        <Header />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/lessons" element={<Lessons />} />
-            <Route path="/vocabsNotebook" element={<VocabsNotebook />} />
-            <Route path="/lessonSammary" element={<LessonSammary />} />
-          </Routes>
-        </main>
-      </div>
+      {showOfflineBanner && (
+        <div className="offline-banner">
+          ⚠️ You're offline - Using cached data
+          {!canUseOffline && " (Limited functionality)"}
+        </div>
+      )}
+
+      <SignedIn>
+        {!onSummary && online && <AutoUpsert />}
+        <Sidebar />
+        <div className="content-container" style={{ marginTop: showOfflineBanner ? '40px' : '0' }}>
+          <Header />
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/lessons" element={<LessonsList online={online} />} />
+              <Route path="/vocabsNotebook" element={<VocabsNotebook online={online} />} />
+              <Route path="/lesson/:id" element={<Lesson online={online} />} />
+              <Route path="/lessonSammary/:id" element={<LessonSammary online={online} />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </main>
+        </div>
+      </SignedIn>
+
+      <SignedOut>
+        <Routes>
+          <Route path="/login" element={<RedirectToSignIn />} />
+          <Route path="/signup" element={<RedirectToSignIn />} />
+          <Route path="/login/sso-callback" element={<div />} />
+          <Route path="/sso-callback" element={<div />} />
+          <Route path="*" element={<RedirectToSignIn />} />
+        </Routes>
+      </SignedOut>
     </div>
   );
+}
+
+function AutoUpsert() {
+  const { isSignedIn, getToken } = useAuth();
+  const calledRef = useRef(false);
+  const abortRef = useRef(false);
+
+  useEffect(() => {
+    abortRef.current = false;
+    return () => {
+      abortRef.current = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSignedIn || calledRef.current) return;
+    calledRef.current = true;
+
+    (async () => {
+      try {
+        const token = await getToken();
+        if (!token) throw new Error("Missing token");
+
+        await fetch(`${API_BASE}/api/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (e) {
+        console.warn("AutoUpsert failed:", e.message);
+      }
+    })();
+  }, [isSignedIn, getToken]);
+
+  return null;
 }
 
 export default App;

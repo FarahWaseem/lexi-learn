@@ -1,28 +1,55 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
+const { clerkMiddleware } = require('./services/clerk');
 
-const app = express();
+function createApp() {
+  const app = express();
 
-// Middlewares
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  // CORS
+  const allowOrigin = (origin, cb) => {
+    if (!origin) return cb(null, true);
+    if (/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) return cb(null, true);
+    if (process.env.FRONTEND_URL && origin.startsWith(process.env.FRONTEND_URL)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  };
+  app.use(cors({ origin: allowOrigin, credentials: true }));
 
-// Static folders
-const PUBLIC = path.join(__dirname, '..', 'public');
-const UPLOADS = path.join(__dirname, '..', 'uploads');
+  // Body parsers
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-if (!fs.existsSync(UPLOADS)) fs.mkdirSync(UPLOADS, { recursive: true });
-app.use(express.static(PUBLIC));
+  // Clerk middleware (early in chain)
+  app.use(clerkMiddleware());
 
-// Routes
-app.get('/', (req, res) => {
-    res.send('✅ Backend is running successfully on port 3001');
+  // Static files
+  const PUBLIC = path.join(__dirname, '..', 'public');
+  app.use(express.static(PUBLIC));
+
+  // Routes
+  const topicsRouter = require('./routes/topics');
+  const usersRouter = require('./routes/users');
+  const sessionsRouter = require('./routes/sessions');
+  const utterancesRouter = require('./routes/utterances');
+
+  app.use('/api', topicsRouter);
+  app.use('/api', usersRouter);
+  app.use('/api/sessions', sessionsRouter);
+  app.use('/api', utterancesRouter);
+
+  // Health check
+  app.get('/', (_req, res) => {
+    res.json({ ok: true, service: 'lexi backend v1.1' });
   });
 
-app.use('/api/day', require('./routes/audioRoutes'));
+  // Global error handler
+  app.use((err, _req, res, _next) => {
+    console.error('Global error:', err);
+    res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
+  });
 
-  
-module.exports = app;
+  return app;
+}
+
+module.exports = { createApp };
+

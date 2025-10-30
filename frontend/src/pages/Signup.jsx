@@ -1,9 +1,10 @@
-import React from 'react'
+//singup.jsx
+import { SignUp } from "@clerk/clerk-react"
 
-const Signup = () => {
+export default function Signup() {
   return (
-    <div>Sginup</div>
+    <div className="flex justify-center items-center h-screen bg-gray-100">
+      <SignUp path="/signup" routing="path" signInUrl="/login" />
+    </div>
   )
 }
-
-export default Signup
