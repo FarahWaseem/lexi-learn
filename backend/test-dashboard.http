@@ -1,0 +1,122 @@
+### LexiLearn Dashboard API Tests
+### استخدم هذا الملف مع REST Client extension في VS Code
+
+@baseUrl = http://localhost:3001
+@token = YOUR_CLERK_TOKEN_HERE
+
+###############################################
+# 1. General Stats
+###############################################
+
+### GET Dashboard Stats
+GET {{baseUrl}}/api/dashboard/stats
+Authorization: Bearer {{token}}
+
+###############################################
+# 2. Users Management
+###############################################
+
+### GET Users List (Default)
+GET {{baseUrl}}/api/dashboard/users
+Authorization: Bearer {{token}}
+
+### GET Users List (with pagination)
+GET {{baseUrl}}/api/dashboard/users?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### GET Users List (with search)
+GET {{baseUrl}}/api/dashboard/users?search=john
+Authorization: Bearer {{token}}
+
+### GET Users List (sorted by score)
+GET {{baseUrl}}/api/dashboard/users?sortBy=avg_score&sortOrder=DESC
+Authorization: Bearer {{token}}
+
+### GET Users List (sorted by sessions)
+GET {{baseUrl}}/api/dashboard/users?sortBy=total_sessions&sortOrder=DESC
+Authorization: Bearer {{token}}
+
+### GET User Details (replace USER_ID)
+GET {{baseUrl}}/api/dashboard/users/USER_ID_HERE
+Authorization: Bearer {{token}}
+
+###############################################
+# 3. Sessions Management
+###############################################
+
+### GET Sessions List (Default)
+GET {{baseUrl}}/api/dashboard/sessions
+Authorization: Bearer {{token}}
+
+### GET Sessions List (completed only)
+GET {{baseUrl}}/api/dashboard/sessions?status=completed
+Authorization: Bearer {{token}}
+
+### GET Sessions List (active only)
+GET {{baseUrl}}/api/dashboard/sessions?status=active
+Authorization: Bearer {{token}}
+
+### GET Sessions List (by user)
+GET {{baseUrl}}/api/dashboard/sessions?userId=USER_ID_HERE
+Authorization: Bearer {{token}}
+
+### GET Sessions List (sorted by score)
+GET {{baseUrl}}/api/dashboard/sessions?sortBy=avg_score&sortOrder=DESC
+Authorization: Bearer {{token}}
+
+###############################################
+# 4. Topics Statistics
+###############################################
+
+### GET Topics Stats
+GET {{baseUrl}}/api/dashboard/topics
+Authorization: Bearer {{token}}
+
+###############################################
+# 5. Analytics
+###############################################
+
+### GET Analytics (30 days)
+GET {{baseUrl}}/api/dashboard/analytics
+Authorization: Bearer {{token}}
+
+### GET Analytics (7 days)
+GET {{baseUrl}}/api/dashboard/analytics?period=7
+Authorization: Bearer {{token}}
+
+### GET Analytics (90 days)
+GET {{baseUrl}}/api/dashboard/analytics?period=90
+Authorization: Bearer {{token}}
+
+###############################################
+# 6. Recent Activity
+###############################################
+
+### GET Recent Activity (Default)
+GET {{baseUrl}}/api/dashboard/recent-activity
+Authorization: Bearer {{token}}
+
+### GET Recent Activity (limited)
+GET {{baseUrl}}/api/dashboard/recent-activity?limit=10
+Authorization: Bearer {{token}}
+
+###############################################
+# 7. Combined Tests
+###############################################
+
+### Test 1: Get all stats for dashboard homepage
+GET {{baseUrl}}/api/dashboard/stats
+Authorization: Bearer {{token}}
+
+### Test 2: Get top 10 users
+GET {{baseUrl}}/api/dashboard/users?limit=10&sortBy=avg_score&sortOrder=DESC
+Authorization: Bearer {{token}}
+
+### Test 3: Get recent activity
+GET {{baseUrl}}/api/dashboard/recent-activity?limit=5
+Authorization: Bearer {{token}}
+
+### Test 4: Get weekly analytics
+GET {{baseUrl}}/api/dashboard/analytics?period=7
+Authorization: Bearer {{token}}
+

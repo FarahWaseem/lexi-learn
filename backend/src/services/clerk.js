@@ -7,6 +7,18 @@ const clerkClient = createClerkClient({
 });
 
 /**
+ * Helper function to add timeout to promises
+ */
+function withTimeout(promise, timeoutMs = 5000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
+    ),
+  ]);
+}
+
+/**
  * يجلب/ينشئ مستخدم التطبيق ويرجّع UUID الداخلي
  * يربط مستخدم Clerk ببريد موجود سابقًا إن وجد.
  */
@@ -15,37 +27,62 @@ async function requireUser(req) {
   const clerkId = auth.userId || auth.user_id;
   if (!clerkId) throw new Error("Auth required: missing Clerk userId");
 
-  const u = await clerkClient.users.getUser(clerkId);
-  const email = u?.primaryEmailAddress?.emailAddress;
-  const firstName = u?.firstName || "Clerk";
-  const lastName = u?.lastName || "User";
-  if (!email) throw new Error("Auth required: missing primary email");
-
-  await pool.query(
-    `UPDATE users SET clerk_user_id=$1
-     WHERE email=$2 AND (clerk_user_id IS NULL OR clerk_user_id='')`,
-    [clerkId, email]
+  // Check if user already exists in DB (cached)
+  const existingUser = await pool.query(
+    `SELECT id, first_name, last_name, email FROM users WHERE clerk_user_id = $1`,
+    [clerkId]
   );
 
+  if (existingUser.rows.length > 0) {
+    // User exists, update last_active and return
+    await pool.query(
+      `UPDATE users SET last_active = NOW() WHERE id = $1`,
+      [existingUser.rows[0].id]
+    );
+    return existingUser.rows[0].id;
+  }
+
+  // User not in DB, create with placeholder data
+  // We'll update with real data from Clerk in background
+  console.log('⚡ Creating new user (fast path):', clerkId);
+  
   const up = await pool.query(
     `INSERT INTO users (clerk_user_id, first_name, last_name, email, password_hash, is_active, last_active)
-     VALUES ($1,$2,$3,$4,'clerk_managed', TRUE, NOW())
+     VALUES ($1, $2, $3, $4, 'clerk_managed', TRUE, NOW())
      ON CONFLICT (clerk_user_id) DO UPDATE
-       SET first_name=EXCLUDED.first_name,
-           last_name=EXCLUDED.last_name,
-           email=EXCLUDED.email,
-           is_active=TRUE,
-           last_active=NOW()
+       SET is_active=TRUE, last_active=NOW()
      RETURNING id;`,
-    [clerkId, firstName, lastName, email]
+    [clerkId, 'User', clerkId.substring(5, 10), `${clerkId}@clerk.temp`]
   );
+
+  // Fetch real data from Clerk in background (non-blocking)
+  setImmediate(async () => {
+    try {
+      const u = await withTimeout(clerkClient.users.getUser(clerkId), 5000);
+      const email = u?.primaryEmailAddress?.emailAddress;
+      const firstName = u?.firstName || "User";
+      const lastName = u?.lastName || clerkId.substring(5, 10);
+      
+      if (email) {
+        await pool.query(
+          `UPDATE users 
+           SET first_name=$1, last_name=$2, email=$3 
+           WHERE clerk_user_id=$4`,
+          [firstName, lastName, email, clerkId]
+        );
+        console.log('✅ User data updated from Clerk');
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not fetch Clerk user data:', err.message);
+    }
+  });
 
   return up.rows[0].id;
 }
 
 async function resolveUsername(userId) {
   try {
-    const u = await clerkClient.users.getUser(userId);
+    const u = await withTimeout(clerkClient.users.getUser(userId), 5000);
     return (
       u?.username ||
       [u?.firstName, u?.lastName].filter(Boolean).join(' ').trim() ||

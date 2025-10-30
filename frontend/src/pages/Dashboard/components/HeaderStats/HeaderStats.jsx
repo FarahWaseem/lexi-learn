@@ -1,31 +1,35 @@
 import React from "react";
 import "./HeaderStats.css";
-import { dashboardMockData } from "../../../../data/dashboardMockData";
 import zaytoonaWave from "../../../../assets/images/zaytoonaWave.png";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-export default function HeaderStats() {
-  const { user, stats } = dashboardMockData;
+export default function HeaderStats({ user, stats }) {
+  // Fallback values if data is not available
+  const userName = user?.name || user?.firstName || "Student";
+  const newWords = stats?.newWords || 0;
+  const completedLessons = stats?.completedLessons || 0;
+  const totalTime = stats?.totalTime || 0;
+  const goalProgress = stats?.goalProgress || 0;
 
   return (
     <div className="header-stats">
       <div className="header-card">
         <div className="header-info">
-          <div className="welcome-title">Welcome Back, {user.name}</div>
+          <div className="welcome-title">Welcome Back, {userName}</div>
           <div className="stats-row">
             <div className="stat-item">
-              <strong>{stats.newWords}</strong>
+              <strong>{newWords}</strong>
               <p>New Words</p>
             </div>
             <div className="divider" />
             <div className="stat-item">
-              <strong>{stats.completedLessons}</strong>
+              <strong>{completedLessons}</strong>
               <p>Completed Lessons</p>
             </div>
             <div className="divider" />
             <div className="stat-item">
-              <strong>{stats.totalTime} min</strong>
+              <strong>{totalTime} min</strong>
               <p>Total Practice Time</p>
             </div>
           </div>
@@ -40,8 +44,8 @@ export default function HeaderStats() {
       <div className="goal-card">
         <div className="goal-progress">
           <CircularProgressbar
-            value={stats.goalProgress}
-            text={`${stats.goalProgress}%`}
+            value={goalProgress}
+            text={`${goalProgress}%`}
             styles={buildStyles({
               pathColor: "#007A3D",
               textColor: "#007A3D",

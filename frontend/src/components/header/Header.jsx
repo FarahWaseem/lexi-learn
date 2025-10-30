@@ -23,7 +23,7 @@ import iconNotif from "../../assets/icons/notification.svg";
 import iconUserCircle from "../../assets/icons/User Circle.svg";
 import iconArrowDown from "../../assets/icons/arrow-down.svg";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:3001";
 
 function Header() {
   const location = useLocation();

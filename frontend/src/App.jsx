@@ -21,7 +21,7 @@ import { useTheme } from "./context/ThemeContext";
 import { persistCurrentRoute, canWorkOffline } from "./utils/offlineManager";
 import "./App.css";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:3001";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:3001";
 
 function App() {
   const { darkMode } = useTheme();
