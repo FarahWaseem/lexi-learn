@@ -33,13 +33,6 @@ export default function Lesson() {
   return (
     <div className="lesson-shell">
       <div className="lesson-top">
-        <div className="lesson-title">
-          {/* <span className="mascot">🫒</span>
-          <div>
-            <h1>Lesson</h1>
-            <p>Realtime speaking & feedback</p>
-          </div> */}
-        </div>
 
         <div className="lesson-actions">
           {!sessionId ? (
